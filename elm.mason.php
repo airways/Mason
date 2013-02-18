@@ -4,7 +4,7 @@
  * @package Mason
  * @author Isaac Raway (MetaSushi, LLC) <isaac.raway@gmail.com>
  *
- * Copyright (c)2009, 2010, 2011. Isaac Raway and MetaSushi, LLC.
+ * Copyright (c)2009, 2010, 2011, 2012, 2013. Isaac Raway and MetaSushi, LLC.
  * All rights reserved.
  *
  * This source is commercial software. Use of this software requires a
@@ -30,12 +30,28 @@
  *
  **/
 
+/*------------------------------------------------------------------------------
+  Programmer  : Isaac Raway       Date: 31.Jan.2013
+  Description : Mason is an element for the Content Elements fieldtype that
+                binds together other elements into reusable "content blocks",
+                which may be used to create pages by assembling blocks as
+                needed.
+  Written for : PHP 5.2+, ExpressionEngine 2.5.3+, Content Elements 1.1.0+
+  Usage       : Install under this location within the Content Elements dir:
+                system/expressionengine/third_party/content_element/elements/mason/
+                After installation, the new Mason (Content Block) element type
+                will be available. Configure the default item as needed, or add
+                additional elements of this type to define new content blocks
+                available to the Channel Field instance.
+  Called by   : ft.content_elements.php
+  Calls       : Elements library
+------------------------------------------------------------------------------*/
 
 class Mason_element { 
 
     var $info = array(
-        'name'	=> 'Mason',
-        'version'	=> '1.0.0'
+        'name'    => 'Mason',
+        'version'    => '1.0.0'
     );
     
     var $settings = array();
@@ -49,9 +65,9 @@ class Mason_element {
         $this->CE = &$this->EE->api_channel_fields->field_types['content_elements'];
     }
     
-    function validate_element($data)
+    /*function validate_element($data)
     {
-        /*
+        
         // Strip data from the post for sub-elements
         if(isset($_POST['mason']['sub_elements']))
         {
@@ -67,8 +83,11 @@ class Mason_element {
                 
             }
         }
-        */
+        
+        
+        //var_dump($_POST);exit;
     }
+    */
     
     function save_element($data)
     {
@@ -77,15 +96,27 @@ class Mason_element {
         $save_data = array(
             'element_data' => array(),
         );
-        //var_dump($_POST);
-        //var_dump($data);
         
+        /*
+        echo '<pre>';
+        echo 'IN ELEMENT:';
+        print_r($_POST);
+        echo '</pre>';
+        exit;
+        // */
         
-        $mason_id = $data;
+        preg_match('/([^\]]*)\[([^\]]*)\].*/', $this->field_name, $matches);
+
+        $field_name = $matches[1];
+        $mason_id = $matches[2];
+        
+        //$mason_id = $data;
+        
         
         if($mason_id && isset($this->settings['mason_elements']))
         {
             // Find our sub-element data
+            /*
             $sub_element_data = array();
             foreach($_POST as $field => $array)
             {
@@ -107,20 +138,52 @@ class Mason_element {
                     }
                     break;
                 }
-            }
-            
+            }*/
+            echo '<b>settings[mason_elements]:</b>';
+            var_dump($this->settings['mason_elements']);
+            //echo '<b>POST:</b>';
+            //var_dump($_POST);
             foreach($this->settings['mason_elements'] as $element_config)
             {
                 $element_name = $element_config['name'];
                 $element_type = $element_config['type'];
-                if(method_exists($this->EE->elements->$element_type->handler, 'save_element'))
+                $element_eid = $element_config['eid'];
+                
+                echo 'Try to save:';
+                var_dump($element_eid);
+                
+                foreach($_POST['mason'][$mason_id]['sub_elements'] as $new_eid => $data)
                 {
-                    $save_data['element_data'][$element_name] = $this->EE->elements->$element_type->handler->save_element($sub_element_data[$element_name]);
+                    if(!is_array($data)) continue;
+                    if($data['field_eid'] != $element_eid) continue;
+                    
+                    
+                    if($element_eid != '__hash_key__' && method_exists($this->EE->elements->$element_type->handler, 'save_element'))
+                    {
+                        echo 'save <b>'.$element_eid.'</b><br/>';
+                        var_dump($data);
+                        $save_data['element_data'][$element_eid] = $this->EE->elements->$element_type->handler->save_element($data['data']);
+                        var_dump('done');
+                    } else {
+                        $save_data['element_data'][$element_eid] = $data['data'];
+                        var_dump('No save_element method or whatever');
+                        var_dump($save_data['element_data'][$element_eid]);
+                    }
                 }
             }
+        } else {
+            echo 'Missing mason id or no mason_elements defined.<br/>';
         }
+        //var_dump($_POST);
         
-        return serialize($save_data);
+        echo '<b>FINAL SAVE:</b>';
+        var_dump($save_data);
+        
+        $out = base64_encode(serialize($save_data));
+        echo $out.'</br>';
+        echo 'hash: '.md5($out).'<br/>';
+        //exit;
+        return $out;
     }
     
     function display_element($data)
@@ -129,76 +192,146 @@ class Mason_element {
         
         $result = '<div class="mason_container">';
         
-        //$result .= form_hidden('__element_name__[__index__][settings]', base64_encode(serialize($this->settings)));
-        $result .= <<<END
-                <input type="hidden" name="__element_name__[__index__][data]" value="__hash_key__" />
-            <script>
-                
-                ContentElements.bind('mason', 'display', function(data) {
-                    // Create new hashes for each subelement
-                    var hash_pattern = /(.*)\[(.*)\]\[.*\]/;
-                    var match = hash_pattern.exec(data.find('input[type=hidden][value=mason]').attr('name'));
-                    var field_name = match[1];
-                    var hash_key = match[2];
-                    if(!field_name || !hash_key) return;
-                    
-                    data.html(data.html().replace('__hash_key__', hash_key));
-                    
-                    data.find('.mason_field').each(function(i, element) {
-                        var new_hash_key = ContentElements.randomString();
-                        var \$this = $(this);
-                        var sub_type = \$this.attr('data-element-type');
-                        
-                        var html =   '<input type="hidden" name="mason[__hash_key__][sub_elements]['+new_hash_key+']" value="'+sub_type+'">'
-                                   + '<input type="hidden" name="'+field_name+'['+new_hash_key+'][element_type]" value="'+sub_type+'">'
-                                   + '<input type="hidden" name="'+field_name+'['+new_hash_key+'][mason_id]" value="__hash_key__">'
-                                   + \$this.html();
-                        
-                        html = html.replace(new RegExp(hash_key, 'g'), new_hash_key);
-                        // Need to associate some things back to the main mason field hash key
-                        html = html.replace(new RegExp('__hash_key__', 'g'), hash_key);
-                        \$this.html(html);
-                        
-                        console.log(\$this.html());
-                        
-                        // Dispatch event to subelements
-                        ContentElements.callback('display', sub_type, \$this);
-                    });
-                });
-            </script>
-END;
+        preg_match('/([^\]]*)\[([^\]]*)\].*/', $this->field_name, $matches);
         
-        $load_data = unserialize($data);
+        $field_name = $matches[1];
+        $mason_id = $matches[2];
+        
+        //if($mason_id == '__index__') $mason_id = '';
+        //if($field_name == '__element_name__') $field_name = '';
+        
+        
+        
+        //$result .= form_hidden('__element_name__[__index__][settings]', base64_encode(serialize($this->settings)));
+        
+        if(!isset($this->cache['assets_loaded']))
+        {
+            $theme_url = rtrim($this->EE->config->item('theme_folder_url'),'/').'/third_party/content_elements/elements/mason/';
+            
+            //$this->EE->cp->add_to_foot('<link rel="stylesheet" href="'.$theme_url.'styles.css" type="text/css" media="screen" />');
+            $this->EE->cp->add_to_foot('<script type="text/javascript" src="'.$theme_url.'publish.js"></script>');			
+            
+            //all loaded, remember it!
+            
+            $this->cache['assets_loaded'] = TRUE;
+        }
+        
+        $result .= '<input type="hidden" name="'.$field_name.'['.$mason_id.'][data]" value="'.$mason_ids.'" />';
+        
+        
+        echo 'Load data:';
+        echo $data.'<br/>';
+        echo 'hash: '.md5($data).'<br/>';
+        $load_data = unserialize(base64_decode($data));
+        
+        var_dump($load_data);
+        var_dump($data);
         //var_dump($this->settings);
         if(isset($this->settings['mason_elements']))
         {
+            if(isset($load_data['element_data']) && is_array($load_data['element_data']))
+            {
+                foreach($load_data['element_data'] as $key => $data)
+                {
+                    if(!is_array($data) && substr($data, 0, 2) === 'a:')
+                    {
+                        $load_data['element_data'][$key] = unserialize($data);
+                    } else {
+                        $load_data['element_data'][$key] = $data;
+                    }
+                }
+            }
+            //echo '<pre>';
+            //print_r($load_data);
+            //echo '</pre>';
+            
             $i = 0;
+            //var_dump($this->settings['mason_elements']);
+            
+            echo 'Element data:';
+            var_dump($load_data['element_data']);
+            
             foreach($this->settings['mason_elements'] as $element_config)
             {
                 $i++;
+                //var_dump($element_config);
                 $element_name = $element_config['name'];
                 $element_type = $element_config['type'];
+                $element_eid = $element_config['eid'];
+                $element_settings = $element_config['settings'];
+                
                 if(method_exists($this->EE->elements->$element_type->handler, 'display_element'))
                 {
-                    $element_result = $this->EE->elements->$element_type->handler->display_element($load_data['element_data'][$element_name]);
                     
+                    echo 'DISPLAY <b>'.$element_eid.'</b><br/>';
+                    
+                    if($mason_id)
+                    {
+                        $this->EE->elements->$element_type->handler->field_name = str_replace($mason_id, $element_eid, $this->field_name);
+                    }
+                    
+                    $this->EE->elements->$element_type->handler->settings = $element_settings;
+                    $element_result = $this->EE->elements->$element_type->handler->display_element($load_data['element_data'][$element_eid], true);
+                    
+                    /*
                     if(preg_match_all('/name="([^"]*)"/', $element_result, $matches))
                     {
                         foreach($matches[1] as $match_i => $input_name)
                         {
                             //echo $input_name.'<br/>';
-                            //$element_result = str_replace('name="'.$input_name.'"', 'name="mason_data['.$i.']['.$input_name.']"', $element_result);
+                            //$element_result = str_replace('name="'.$input_name.'"', 'name="'.$input_name.'['.$i.']"', $element_result);
                         }
                         
                     }
+                    */
+                    //echo $field_name;
                     
-                    if($i > 1) $result .= '<br/><br/>';
-                    $result .= '<div class="mason_field" data-element-type="'.$element_type.'">';
-                    //var_dump($element_config);
-                    $result .= form_hidden('__element_name__[__index__][element_settings]', base64_encode(serialize($element_config)));
+                    
+                    if($i > 1) $result .= '<br/><br />';
+                    $result .= '<div class="mason_field" data-element-type="'.$element_type.'" data-eid="'.$element_eid.'">';
+                    $element_config['element_type'] = $element_config['type'];
+                    
+                    echo 'element_settings:';
+                    var_dump($element_config);
+                    
+                    
+                    /*
+                    '<input type="hidden" name="mason[__mason_id__][sub_elements]['+eid+']" value="'+sub_type+'">'
+                       + '<input type="hidden" name="'+field_name+'['+eid+'][element_type]" value="'+sub_type+'">'
+                       + '<input type="hidden" name="'+field_name+'['+eid+'][mason_id]" value="__mason_id__">'
+                       + '<input type="hidden" name="'+field_name+'['+eid+'][field_eid]" value="'+eid+'">'
+                    */
+                    
+                    $result .= form_hidden($field_name.'['.$element_eid.'][element_settings]', base64_encode(serialize($element_config)));
+                    
+                    $element_result = form_hidden('mason['.$mason_id.'][sub_elements]['.$element_eid.']',  $element_config['type'])
+                        . form_hidden($field_name.'['.$element_eid.'][element_type]',  $element_config['type'])
+                        . form_hidden($field_name.'['.$element_eid.'][mason_id]',  '__mason_id__')
+                        . form_hidden($field_name.'['.$element_eid.'][field_eid]',  '__field_eid__')
+                        . $element_result;
+                    
+                    $element_result = str_replace('__element_name__', $field_name, $element_result);
+                    $element_result = str_replace('__index__', $element_eid, $element_result);
+                    //$element_result = str_replace($mason_id, $element_eid, $element_result);
+                    
+                    if(!is_null($load_data['element_data']))
+                    {
+                        // Existing entry - not a template - make up a temporary ID and replace it into the result
+                        $new_eid = $this->random_string();
+                        //$element_result = str_replace($element_eid, $new_eid, $element_result);
+                    }
+                    
+                    //$element_result = str_replace('__field_eid__', $element_eid, $element_result);
+                    
+                    
+                    
+                    //$result .= form_hidden('__element_name__[__index__][element_settings]', base64_encode(serialize($element_config)));
                     $result .= '<b>'.$element_config['title'].'</b><br/>';
                     $result .= $element_result;
                     $result .= '</div>';
+                    
+                    //echo $this->field_name.'<br/>';
+                    //echo htmlspecialchars($element_result);exit;
                 }
             }
         }
@@ -218,10 +351,13 @@ END;
         {
             foreach($this->settings['mason_elements'] as $element_config)
             {
+                $element_name = $element_config['name'];
                 $element_type = $element_config['type'];
+                $element_eid = $element_config['eid'];
+                
                 if(method_exists($this->EE->elements->$element_type->handler, 'replace_element_tag'))
                 {
-                    $result = $this->EE->elements->$element_type->handler->replace_element_tag($data, $params, $result);
+                    $result = $this->EE->elements->$element_type->handler->replace_element_tag($data[$element_eid], $params, $result);
                 }
             }
         }
@@ -248,14 +384,17 @@ END;
         
         // Load settings for each of the configured elements
         $i = 0;
-        //var_dump($data);exit;
+        
         if(isset($data['mason_elements']))
         {
+
             foreach($data['mason_elements'] as $element_config)
             {
+                //var_dump($element_config);
                 $i++;
                 $settings[] = array(
                         lang('mason_title') . ' ' . $i,
+                        form_hidden('field_eid]['.$i, $element_config['settings']['eid']) .
                         form_input('field_title]['.$i, $element_config['title']),
                     );
                 $settings[] = array(
@@ -313,6 +452,7 @@ END;
         // Add blank settings fields to be used to add a new element
         $settings[] = array(
                 lang('mason_title') . ' (New)',
+                form_hidden('field_eid]['.$i, '__eid__') .
                 form_input('field_title]['.$i),
             );
         $settings[] = array(
@@ -335,9 +475,21 @@ END;
         
         foreach($data['field_name'] as $i => $field_name)
         {
+            if(!$field_name) continue;
+            
             $field_title = $data['field_title'][$i];
             $field_type = $data['field_type'][$i];
             $field_settings = $data['field_settings'][$i];
+            $field_eid = $data['field_eid'][$i];
+            
+            if($field_eid == '__eid__')
+            {
+                $field_eid = $this->random_string();
+            }
+            
+            $field_settings['title'] = $field_title;
+            $field_settings['element'] = $field_type;
+            $field_settings['eid'] = $field_eid;
             
             if($field_name && $field_type)
             {
@@ -346,12 +498,13 @@ END;
                     'name' => $field_name,
                     'type' => $field_type,
                     'settings' => $field_settings,
+                    'eid' => $field_eid
                 );
             }
         }
         
         $data['settings'] = array(
-            'title' => $data['title']
+            'title' => isset($data['title']) ? $data['title'] : ''
         );
         
         // Remove parallel arrays
@@ -360,6 +513,7 @@ END;
         unset($data['field_type']);
         unset($data['field_settings']);
         
+        
         return $data;
     }
     
@@ -367,22 +521,50 @@ END;
     {
         /* Loop through configured elements, previewing each one for the backend */
         
-        $result = '';
+        /*$result = '';
+        
+        $data = unserialize($data);
         
         if(isset($this->settings['mason_elements']))
         {
             foreach($this->settings['mason_elements'] as $element_config)
             {
+                $element_name = $element_config['name'];
                 $element_type = $element_config['type'];
+                $element_eid = $element_config['eid'];
+                
                 if(method_exists($this->EE->elements->$element_type->handler, 'preview_element'))
                 {
-                    $result .= $this->EE->elements->$element_type->handler->preview_element($data);
+                    if(isset($data['element_data'][$element_eid]))
+                    {
+                        $this->prep_handler($element_type, $element_config['settings']);
+                        $result .= $this->EE->elements->$element_type->handler->preview_element($data['element_data'][$element_eid]);
+                    }
                 }
             }
         }
-        return $result;
+        return $result;*/
+        return '';
     }
     
+    function prep_handler($element_type, $settings)
+    {
+        $this->EE->elements->$element_type->handler->element_name  = $settings["title"];	
+
+        $this->EE->elements->$element_type->handler->element_title  = $settings["title"];	
+            
+        $this->EE->elements->$element_type->handler->element_id  = $settings["eid"];	
+    }
+    
+    function random_string($length = 16)
+    {
+        $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz';
+        $str = '';
+        for ($i = 0; $i < $length; $i++) {
+            $str .= $chars[rand(0, strlen($chars) - 1)];
+        }
+        return $str;
+    }
     
     /* This method is private in Content Elements, so we need a copy */
     private function _display_content_element_settings($element, $settings = array())
@@ -395,12 +577,12 @@ END;
     
         if (method_exists($this->EE->elements->$element->handler, 'display_element_settings'))
         {
-            $data = $this->EE->elements->$element->handler->display_element_settings($this->_exclude_setting_system_fields($settings));			
+            $data = $this->EE->elements->$element->handler->display_element_settings($this->_exclude_setting_system_fields($settings));            
             
             if (is_array($data))
             {
                 $data = $this->EE->load->view('layout/settings_table', array("settings" => $data), TRUE);
-            }	
+            }    
         }
         else
         {
@@ -412,14 +594,14 @@ END;
         preg_match_all('/name\s*=\s*["|\']([^"\']*?)["|\']/', $data, $matches);
         
         if (isset($matches[0]) && is_array($matches[0])) foreach ($matches[0] as $k=>$pattern)
-        {	
+        {    
             if (isset($settings["eid"]))
             {
-                $replacement 	= str_replace($matches[1][$k],'content_element['.$element.']['.$settings["eid"].']['.$matches[1][$k].']', $matches[0][$k]);
+                $replacement     = str_replace($matches[1][$k],'content_element['.$element.']['.$settings["eid"].']['.$matches[1][$k].']', $matches[0][$k]);
             }
             else
             {
-                $replacement 	= str_replace($matches[1][$k],'content_element['.$element.'][__index__]['.$matches[1][$k].']', $matches[0][$k]);
+                $replacement     = str_replace($matches[1][$k],'content_element['.$element.'][__index__]['.$matches[1][$k].']', $matches[0][$k]);
             }
             $data = str_replace($pattern, $replacement, $data);
         }
@@ -427,10 +609,10 @@ END;
         //display
 
         $vars = array(
-            "title"		=> @$settings['title'],		//element title
-            "eid"		=> (@$settings['eid'])?$settings['eid']:'__index__',
-            "element"	=> $element,				//element type
-            "data"		=> $data,
+            "title"        => @$settings['title'],          //element title
+            "eid"        => (@$settings['eid'])?$settings['eid']:'__index__',
+            "element"    => $element,                       //element type
+            "data"        => $data,
         );
         
         return $this->EE->load->view('layout/settings_wrapper', $vars, TRUE);
