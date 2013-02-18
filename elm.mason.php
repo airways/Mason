@@ -524,9 +524,9 @@ class Mason_element {
     {
         /* Loop through configured elements, previewing each one for the backend */
         
-        /*$result = '';
+        $result = '';
         
-        $data = unserialize($data);
+        $data = unserialize(base64_decode($data));
         
         if(isset($this->settings['mason_elements']))
         {
@@ -546,8 +546,8 @@ class Mason_element {
                 }
             }
         }
-        return $result;*/
-        return '';
+        return $result;
+        //return '';
     }
     
     function prep_handler($element_type, $settings)
