@@ -302,9 +302,9 @@ class Mason_element {
                        + '<input type="hidden" name="'+field_name+'['+eid+'][field_eid]" value="'+eid+'">'
                     */
                     
-                    $result .= form_hidden($field_name.'['.$element_eid.'][element_settings]', base64_encode(serialize($element_config)));
                     
-                    $element_result = form_hidden('mason['.$mason_id.'][sub_elements]['.$element_eid.']',  $element_config['type'])
+                    $element_result = form_hidden($field_name.'['.$element_eid.'][element_settings]', base64_encode(serialize($element_config)))
+                        . form_hidden('mason['.$mason_id.'][sub_elements]['.$element_eid.']',  $element_config['type'])
                         . form_hidden($field_name.'['.$element_eid.'][element_type]',  $element_config['type'])
                         . form_hidden($field_name.'['.$element_eid.'][mason_id]',  '__mason_id__')
                         . form_hidden($field_name.'['.$element_eid.'][field_eid]',  '__field_eid__')
@@ -318,7 +318,10 @@ class Mason_element {
                     {
                         // Existing entry - not a template - make up a temporary ID and replace it into the result
                         $new_eid = $this->random_string();
-                        //$element_result = str_replace($element_eid, $new_eid, $element_result);
+                        $element_result = str_replace($element_eid, $new_eid, $element_result);
+                        
+                        $element_result = str_replace('__mason_id__', $mason_id, $element_result);
+                        $element_result = str_replace('__field_eid__', $element_eid, $element_result);
                     }
                     
                     //$element_result = str_replace('__field_eid__', $element_eid, $element_result);
