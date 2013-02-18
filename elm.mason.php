@@ -139,8 +139,8 @@ class Mason_element {
                     break;
                 }
             }*/
-            echo '<b>settings[mason_elements]:</b>';
-            var_dump($this->settings['mason_elements']);
+            //echo '<b>settings[mason_elements]:</b>';
+            //var_dump($this->settings['mason_elements']);
             //echo '<b>POST:</b>';
             //var_dump($_POST);
             foreach($this->settings['mason_elements'] as $element_config)
@@ -149,8 +149,8 @@ class Mason_element {
                 $element_type = $element_config['type'];
                 $element_eid = $element_config['eid'];
                 
-                echo 'Try to save:';
-                var_dump($element_eid);
+                //echo 'Try to save:';
+                //var_dump($element_eid);
                 
                 foreach($_POST['mason'][$mason_id]['sub_elements'] as $new_eid => $data)
                 {
@@ -160,14 +160,14 @@ class Mason_element {
                     
                     if($element_eid != '__hash_key__' && method_exists($this->EE->elements->$element_type->handler, 'save_element'))
                     {
-                        echo 'save <b>'.$element_eid.'</b><br/>';
-                        var_dump($data);
+                        //echo 'save <b>'.$element_eid.'</b><br/>';
+                        //var_dump($data);
                         $save_data['element_data'][$element_eid] = $this->EE->elements->$element_type->handler->save_element($data['data']);
-                        var_dump('done');
+                        //var_dump('done');
                     } else {
                         $save_data['element_data'][$element_eid] = $data['data'];
-                        var_dump('No save_element method or whatever');
-                        var_dump($save_data['element_data'][$element_eid]);
+                        //var_dump('No save_element method or whatever');
+                        //var_dump($save_data['element_data'][$element_eid]);
                     }
                 }
             }
@@ -176,12 +176,12 @@ class Mason_element {
         }
         //var_dump($_POST);
         
-        echo '<b>FINAL SAVE:</b>';
-        var_dump($save_data);
+        //echo '<b>FINAL SAVE:</b>';
+        //var_dump($save_data);
         
         $out = base64_encode(serialize($save_data));
-        echo $out.'</br>';
-        echo 'hash: '.md5($out).'<br/>';
+        //echo $out.'</br>';
+        //echo 'hash: '.md5($out).'<br/>';
         //exit;
         return $out;
     }
@@ -216,16 +216,16 @@ class Mason_element {
             $this->cache['assets_loaded'] = TRUE;
         }
         
-        $result .= '<input type="hidden" name="'.$field_name.'['.$mason_id.'][data]" value="'.$mason_ids.'" />';
+        $result .= '<input type="hidden" name="'.$field_name.'['.$mason_id.'][data]" value="'.$mason_id.'" />';
         
         
-        echo 'Load data:';
-        echo $data.'<br/>';
-        echo 'hash: '.md5($data).'<br/>';
+        //echo 'Load data:';
+        //echo $data.'<br/>';
+        //echo 'hash: '.md5($data).'<br/>';
         $load_data = unserialize(base64_decode($data));
         
-        var_dump($load_data);
-        var_dump($data);
+        //var_dump($load_data);
+        //var_dump($data);
         //var_dump($this->settings);
         if(isset($this->settings['mason_elements']))
         {
@@ -248,8 +248,8 @@ class Mason_element {
             $i = 0;
             //var_dump($this->settings['mason_elements']);
             
-            echo 'Element data:';
-            var_dump($load_data['element_data']);
+            //echo 'Element data:';
+            //var_dump($load_data['element_data']);
             
             foreach($this->settings['mason_elements'] as $element_config)
             {
@@ -263,7 +263,7 @@ class Mason_element {
                 if(method_exists($this->EE->elements->$element_type->handler, 'display_element'))
                 {
                     
-                    echo 'DISPLAY <b>'.$element_eid.'</b><br/>';
+                    //echo 'DISPLAY <b>'.$element_eid.'</b><br/>';
                     
                     if($mason_id)
                     {
@@ -291,8 +291,8 @@ class Mason_element {
                     $result .= '<div class="mason_field" data-element-type="'.$element_type.'" data-eid="'.$element_eid.'">';
                     $element_config['element_type'] = $element_config['type'];
                     
-                    echo 'element_settings:';
-                    var_dump($element_config);
+                    //echo 'element_settings:';
+                    //var_dump($element_config);
                     
                     
                     /*
