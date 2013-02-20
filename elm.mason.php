@@ -271,7 +271,7 @@ class Mason_element {
                     }
                     
                     $this->EE->elements->$element_type->handler->settings = $element_settings;
-                    $element_result = $this->EE->elements->$element_type->handler->display_element($load_data['element_data'][$element_eid], true);
+                    $element_result = $this->EE->elements->$element_type->handler->display_element(@$load_data['element_data'][$element_eid], true);
                     
                     /*
                     if(preg_match_all('/name="([^"]*)"/', $element_result, $matches))
@@ -347,22 +347,77 @@ class Mason_element {
     function replace_element_tag($data, $params = array(), $tagdata)
     {
         /* Loop through configured elements, replacing each one for the frontend */
+        $load_data = unserialize(base64_decode($data));
         
-        $result = $tagdata;
+        if(isset($load_data['element_data']) && is_array($load_data['element_data']))
+        {
+            foreach($load_data['element_data'] as $key => $data)
+            {
+                //if(!is_array($data) && substr($data, 0, 2) === 'a:')
+                //{
+                //    $load_data['element_data'][$key] = unserialize($data);
+                //} else {
+                    $load_data['element_data'][$key] = $data;
+                //}
+            }
+        }
+        
+        $result = '';
+        
+        $tagdata = str_replace(LD.'block_name'.RD, $this->element_name, $tagdata);
         
         if(isset($this->settings['mason_elements']))
         {
+        
+            $row_result = $tagdata;
+            
             foreach($this->settings['mason_elements'] as $element_config)
             {
                 $element_name = $element_config['name'];
                 $element_type = $element_config['type'];
                 $element_eid = $element_config['eid'];
                 
+                //var_dump($element_name);
+                
+                $this->EE->elements->$element_type->handler->element_name = $element_name;
+                
+                $block = false;
+                $match = false;
+                
+                // If the user is not using a closing tag, they just want the value - turn it into
+                // a pair with {value} inbetween
+                if(($pos = strpos($row_result, LD.'/'.$element_name.RD)) === FALSE)
+                {
+                    $row_result = str_replace(LD.$element_name.RD, LD.$element_name.RD.'{value}'.LD.'/'.$element_name.RD, $row_result);
+                }
+                
+                // Find the block for this field
+                if($count = preg_match($pattern = '#'.LD.$element_name.RD.'(.*?)'.LD.'/'.$element_name.RD.'#s', $row_result, $matches))
+                {
+                    $match = $matches[0];
+                    $block = $matches[1];
+                }
+                
+                // If there is a parsing method, call it - otherwise just set our result to the text data value
                 if(method_exists($this->EE->elements->$element_type->handler, 'replace_element_tag'))
                 {
-                    $result = $this->EE->elements->$element_type->handler->replace_element_tag($data[$element_eid], $params, $result);
+                    $parse_result = $this->EE->elements->$element_type->handler->replace_element_tag($load_data['element_data'][$element_eid], $params, $block);
+                } else {
+                    $parse_result = $load_data['element_data'][$element_eid];
                 }
+                
+                // Replace the entire matched block including the tag pair with the parse results
+                $row_result = str_replace($match, $parse_result, $row_result);
+                
+                //echo "<pre>Input for ".$element_name.":\n";
+                //echo htmlspecialchars($block);
+                //echo "<pre>Output for ".$element_name.":\n";
+                //echo htmlspecialchars($row_result);exit;
+
+ 
+                
             }
+            $result .= $row_result;
         }
         
         return $result;
@@ -474,6 +529,7 @@ class Mason_element {
     {
         /* Compose parallel element configuration arrays into a single array of arrays */
         
+        $data['mason_name'] = $this->element_name;
         $data['mason_elements'] = array();
         
         foreach($data['field_name'] as $i => $field_name)
@@ -507,6 +563,7 @@ class Mason_element {
         }
         
         $data['settings'] = array(
+            'name' => $this->element_name,
             'title' => isset($data['title']) ? $data['title'] : ''
         );
         
