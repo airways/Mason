@@ -1,4 +1,4 @@
-<?php if (! defined('BASEPATH')) exit('No direct script access allowed');
+<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 /**
  * @package Mason
@@ -27,25 +27,24 @@
  * copyright to the original author, your license to  use and modify this
  * source is null and void. Use of this software constitutes your agreement
  * to this clause.
- *
- **/
 
-/*------------------------------------------------------------------------------
+ **//*--------------------------------------------------------------------------
   Programmer  : Isaac Raway       Date: 31.Jan.2013
   Description : Mason is an element for the Content Elements fieldtype that
                 binds together other elements into reusable "content blocks",
                 which may be used to create pages by assembling blocks as
                 needed.
+                This extension is a required helper that is used by the mason
+                element to gather it's data prior to Content Elements
+                processing.
   Written for : PHP 5.2+, ExpressionEngine 2.5.3+, Content Elements 1.1.0+
-  Usage       : Install under this location within the Content Elements dir:
-                system/expressionengine/third_party/content_element/elements/mason/
-                After installation, the new Mason (Content Block) element type
-                will be available. Configure the default item as needed, or add
-                additional elements of this type to define new content blocks
-                available to the Channel Field instance.
-  Called by   : ft.content_elements.php
-  Calls       : Elements library
-------------------------------------------------------------------------------*/
+  Usage       : Install under this location the third part directory:
+                system/expressionengine/third_party/mason/
+                You must also install the Mason element within the Content
+                Elements directory.
+  Called by   : ExpressioneEngine
+  Calls       : Nothing
+ -----------------------------------------------------------------------------*/
 
 class Mason_element { 
 
@@ -473,7 +472,9 @@ class Mason_element {
                 $element_type = $element_config['type'];
                 if(method_exists($this->EE->elements->$element_type->handler, 'display_element_settings'))
                 {
-                    $element_settings = $this->EE->elements->$element_type->handler->display_element_settings($this->_exclude_setting_system_fields($element_config['settings']));
+                    $element_settings = $this->EE->elements->$element_type->handler->display_element_settings(
+                        $this->_exclude_setting_system_fields($element_config['settings']));
+                    
                     if (is_array($element_settings))
                     {
                         //echo '<pre>';
