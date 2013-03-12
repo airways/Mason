@@ -62,6 +62,11 @@ class Mason_element {
         $this->EE = &get_instance();
         $this->info["name"] = $this->EE->lang->line('mason_element_name');
         $this->CE = &$this->EE->api_channel_fields->field_types['content_elements'];
+        
+        //echo 'E_ALL = '.E_ALL.'<br/>';
+        //echo 'error_reporting = '.error_reporting();exit;
+        
+        
     }
     
     /*function validate_element($data)
@@ -147,6 +152,7 @@ class Mason_element {
                 $element_name = $element_config['name'];
                 $element_type = $element_config['type'];
                 $element_eid = $element_config['eid'];
+                $element_settings = $element_config['settings'];
                 
                 //echo 'Try to save:';
                 //var_dump($element_eid);
@@ -161,6 +167,7 @@ class Mason_element {
                     {
                         //echo 'save <b>'.$element_eid.'</b><br/>';
                         //var_dump($data);
+                        $this->EE->elements->$element_type->handler->settings = $element_settings;
                         $save_data['element_data'][$element_eid] = $this->EE->elements->$element_type->handler->save_element($data['data']);
                         //var_dump('done');
                     } else {
@@ -387,6 +394,7 @@ class Mason_element {
                 $element_name = $element_config['name'];
                 $element_type = $element_config['type'];
                 $element_eid = $element_config['eid'];
+                $element_settings = $element_config['settings'];
                 
                 //var_dump($element_name);
                 
@@ -412,6 +420,7 @@ class Mason_element {
                 // If there is a parsing method, call it - otherwise just set our result to the text data value
                 if(method_exists($this->EE->elements->$element_type->handler, 'replace_element_tag'))
                 {
+                    $this->EE->elements->$element_type->handler->settings = $element_settings;
                     $parse_result = $this->EE->elements->$element_type->handler->replace_element_tag($load_data['element_data'][$element_eid], $params, $block);
                 } else {
                     $parse_result = $load_data['element_data'][$element_eid];
@@ -484,6 +493,7 @@ class Mason_element {
                 $element_type = $element_config['type'];
                 if(method_exists($this->EE->elements->$element_type->handler, 'display_element_settings'))
                 {
+                    $this->EE->elements->$element_type->handler->settings = $element_settings;
                     $element_settings = $this->EE->elements->$element_type->handler->display_element_settings(
                         $this->_exclude_setting_system_fields($element_config['settings']));
                     
@@ -605,12 +615,14 @@ class Mason_element {
                 $element_name = $element_config['name'];
                 $element_type = $element_config['type'];
                 $element_eid = $element_config['eid'];
+                $element_settings = $element_config['settings'];
                 
                 if(method_exists($this->EE->elements->$element_type->handler, 'preview_element'))
                 {
                     if(isset($data['element_data'][$element_eid]))
                     {
                         $this->prep_handler($element_type, $element_config['settings']);
+                        $this->EE->elements->$element_type->handler->settings = $element_settings;
                         $result .= $this->EE->elements->$element_type->handler->preview_element($data['element_data'][$element_eid]);
                     }
                 }
