@@ -259,7 +259,7 @@ class Mason_element {
                 $element_eid = $element_config['eid'];
                 $element_settings = $element_config['settings'];
                 
-                if(method_exists($this->EE->elements->$element_type->handler, 'display_element'))
+                if(isset($this->EE->elements->$element_type) && method_exists($this->EE->elements->$element_type->handler, 'display_element'))
                 {
                     
                     //echo 'DISPLAY <b>'.$element_eid.'</b><br/>';
@@ -376,44 +376,44 @@ class Mason_element {
                 $element_type = $element_config['type'];
                 $element_eid = $element_config['eid'];
                 
-                //var_dump($element_name);
-                
-                $this->EE->elements->$element_type->handler->element_name = $element_name;
-                
-                $block = false;
-                $match = false;
-                
-                // If the user is not using a closing tag, they just want the value - turn it into
-                // a pair with {value} inbetween
-                if(($pos = strpos($row_result, LD.'/'.$element_name.RD)) === FALSE)
+                if(isset($this->EE->elements->$element_type->handler))
                 {
-                    $row_result = str_replace(LD.$element_name.RD, LD.$element_name.RD.'{value}'.LD.'/'.$element_name.RD, $row_result);
-                }
-                
-                // Find the block for this field
-                if($count = preg_match($pattern = '#'.LD.$element_name.RD.'(.*?)'.LD.'/'.$element_name.RD.'#s', $row_result, $matches))
-                {
-                    $match = $matches[0];
-                    $block = $matches[1];
-                }
-                
-                // If there is a parsing method, call it - otherwise just set our result to the text data value
-                if(method_exists($this->EE->elements->$element_type->handler, 'replace_element_tag'))
-                {
-                    $parse_result = $this->EE->elements->$element_type->handler->replace_element_tag($load_data['element_data'][$element_eid], $params, $block);
-                } else {
-                    $parse_result = $load_data['element_data'][$element_eid];
-                }
-                
-                // Replace the entire matched block including the tag pair with the parse results
-                $row_result = str_replace($match, $parse_result, $row_result);
-                
-                //echo "<pre>Input for ".$element_name.":\n";
-                //echo htmlspecialchars($block);
-                //echo "<pre>Output for ".$element_name.":\n";
-                //echo htmlspecialchars($row_result);exit;
+                    $this->EE->elements->$element_type->handler->element_name = $element_name;
+                    
+                    $block = false;
+                    $match = false;
+                    
+                    // If the user is not using a closing tag, they just want the value - turn it into
+                    // a pair with {value} inbetween
+                    if(($pos = strpos($row_result, LD.'/'.$element_name.RD)) === FALSE)
+                    {
+                        $row_result = str_replace(LD.$element_name.RD, LD.$element_name.RD.'{value}'.LD.'/'.$element_name.RD, $row_result);
+                    }
+                    
+                    // Find the block for this field
+                    if($count = preg_match($pattern = '#'.LD.$element_name.RD.'(.*?)'.LD.'/'.$element_name.RD.'#s', $row_result, $matches))
+                    {
+                        $match = $matches[0];
+                        $block = $matches[1];
+                    }
+                    
+                    // If there is a parsing method, call it - otherwise just set our result to the text data value
+                    if(method_exists($this->EE->elements->$element_type->handler, 'replace_element_tag'))
+                    {
+                        $parse_result = $this->EE->elements->$element_type->handler->replace_element_tag($load_data['element_data'][$element_eid], $params, $block);
+                    } else {
+                        $parse_result = $load_data['element_data'][$element_eid];
+                    }
+                    
+                    // Replace the entire matched block including the tag pair with the parse results
+                    $row_result = str_replace($match, $parse_result, $row_result);
+                    
+                    //echo "<pre>Input for ".$element_name.":\n";
+                    //echo htmlspecialchars($block);
+                    //echo "<pre>Output for ".$element_name.":\n";
+                    //echo htmlspecialchars($row_result);exit;
 
- 
+                }
                 
             }
             $result .= $row_result;
