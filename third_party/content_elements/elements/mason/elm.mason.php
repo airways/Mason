@@ -62,6 +62,11 @@ class Mason_element {
         $this->EE = &get_instance();
         $this->info["name"] = $this->EE->lang->line('mason_element_name');
         $this->CE = &$this->EE->api_channel_fields->field_types['content_elements'];
+        
+        //echo 'E_ALL = '.E_ALL.'<br/>';
+        //echo 'error_reporting = '.error_reporting();exit;
+        
+        
     }
     
     /*function validate_element($data)
@@ -147,6 +152,7 @@ class Mason_element {
                 $element_name = $element_config['name'];
                 $element_type = $element_config['type'];
                 $element_eid = $element_config['eid'];
+                $element_settings = $element_config['settings'];
                 
                 //echo 'Try to save:';
                 //var_dump($element_eid);
@@ -161,6 +167,7 @@ class Mason_element {
                     {
                         //echo 'save <b>'.$element_eid.'</b><br/>';
                         //var_dump($data);
+                        $this->EE->elements->$element_type->handler->settings = $element_settings;
                         $save_data['element_data'][$element_eid] = $this->EE->elements->$element_type->handler->save_element($data['data']);
                         //var_dump('done');
                     } else {
@@ -230,13 +237,17 @@ class Mason_element {
         {
             if(isset($load_data['element_data']) && is_array($load_data['element_data']))
             {
+                $load_data['element_meta'] = array();
+                
                 foreach($load_data['element_data'] as $key => $data)
                 {
                     if(!is_array($data) && substr($data, 0, 2) === 'a:')
                     {
                         $load_data['element_data'][$key] = unserialize($data);
+                        $load_data['element_meta'][$key.':was_serialized'] = true;
                     } else {
                         $load_data['element_data'][$key] = $data;
+                        $load_data['element_meta'][$key.':was_serialized'] = false;
                     }
                 }
             }
@@ -270,7 +281,15 @@ class Mason_element {
                     }
                     
                     $this->EE->elements->$element_type->handler->settings = $element_settings;
-                    $element_result = $this->EE->elements->$element_type->handler->display_element(@$load_data['element_data'][$element_eid], true);
+                    
+                    if(@$load_data['element_meta'][$element_eid.':was_serialized'])
+                    {
+                        $data = serialize(@$load_data['element_data'][$element_eid]);
+                    } else {
+                        $data = @$load_data['element_data'][$element_eid];
+                    }
+                    
+                    $element_result = $this->EE->elements->$element_type->handler->display_element($data, true);
                     
                     /*
                     if(preg_match_all('/name="([^"]*)"/', $element_result, $matches))
@@ -375,6 +394,7 @@ class Mason_element {
                 $element_name = $element_config['name'];
                 $element_type = $element_config['type'];
                 $element_eid = $element_config['eid'];
+                $element_settings = $element_config['settings'];
                 
                 if(isset($this->EE->elements->$element_type->handler))
                 {
@@ -412,7 +432,6 @@ class Mason_element {
                     //echo htmlspecialchars($block);
                     //echo "<pre>Output for ".$element_name.":\n";
                     //echo htmlspecialchars($row_result);exit;
-
                 }
                 
             }
@@ -472,6 +491,7 @@ class Mason_element {
                 $element_type = $element_config['type'];
                 if(method_exists($this->EE->elements->$element_type->handler, 'display_element_settings'))
                 {
+                    $this->EE->elements->$element_type->handler->settings = $element_settings;
                     $element_settings = $this->EE->elements->$element_type->handler->display_element_settings(
                         $this->_exclude_setting_system_fields($element_config['settings']));
                     
@@ -593,12 +613,14 @@ class Mason_element {
                 $element_name = $element_config['name'];
                 $element_type = $element_config['type'];
                 $element_eid = $element_config['eid'];
+                $element_settings = $element_config['settings'];
                 
                 if(method_exists($this->EE->elements->$element_type->handler, 'preview_element'))
                 {
                     if(isset($data['element_data'][$element_eid]))
                     {
                         $this->prep_handler($element_type, $element_config['settings']);
+                        $this->EE->elements->$element_type->handler->settings = $element_settings;
                         $result .= $this->EE->elements->$element_type->handler->preview_element($data['element_data'][$element_eid]);
                     }
                 }
