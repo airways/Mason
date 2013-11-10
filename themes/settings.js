@@ -14,6 +14,23 @@ var mason_settings = {
         }
         $('input.field_title').unbind('keydown').unbind('change').keydown(update_field_label).keyup(update_field_label).change(update_field_label);
 
+
+        $('.ce_settings_mason').disableSelection().sortable({
+			handle: '.mason_block_handle',
+			helper: function(e, ui) {			
+				return ui;
+			},
+			axis: "y",
+			items: '.mason_block_element',
+			tolerance: 'pointer',
+			opacity: 0,
+			cursor: 'move',
+			stop: function(e, ui) {
+				//restore all ck_editors data in the tile	
+				$('.ce_settings_wrapper').removeAttr('style');
+			}
+		}); 
+		
     },
     make_name: function(s) {
         var r = s.toLowerCase();

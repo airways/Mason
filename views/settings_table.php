@@ -7,9 +7,9 @@
 	<table cellpadding="0" cellspacing="0" class="ce_settings_table ce_settings_mason" width="100%">
 	
 		<?php foreach ($settings as $i => $setting_block): ?>
-	    <tr><td colspan="3"><div class="element_top"></div></td></tr>
 		<tr class="mason_block_element <?php if($i == count($settings)-1) echo ' last'; ?>">
     		<td>
+        		<div class="element_top"></div>
     		    <?php if(is_array($setting_block)): ?>
         		    <span class="mason_block_handle" href="#"></span>
         		    <a class="mason_button_remove" href="#"></a>
@@ -27,11 +27,11 @@
         		<?php else: ?>
         		    <?= $setting_block ?>
         		<?php endif; ?>
+        		<?php if($i != count($settings)-1): ?>
+        	    <div class="element_bottom"></div>
+        	    <?php endif; ?>
 		    </td>
 		</tr>
-		<?php if($i != count($settings)-1): ?>
-	    <tr><td colspan="3"><div class="element_bottom"></div></td></tr>
-	    <?php endif; ?>
 		<?php endforeach; ?>
 		 	 		 
 	</table>
