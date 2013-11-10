@@ -34,15 +34,10 @@
                 binds together other elements into reusable "content blocks",
                 which may be used to create pages by assembling blocks as
                 needed.
-                This extension is a required helper that is used by the mason
-                element to gather it's data prior to Content Elements
-                processing.
   Written for : PHP 5.2+, ExpressionEngine 2.5.3+, Content Elements 1.1.0+
-  Usage       : Install under this location the third part directory:
-                system/expressionengine/third_party/mason/
-                You must also install the Mason element within the Content
-                Elements directory.
-  Called by   : ExpressioneEngine
+  Usage       : Install the Mason element within the Content Elements directory:
+                system/expressionengine/third_party/content_elements/elements/mason/
+  Called by   : Content Elements
   Calls       : Nothing
  -----------------------------------------------------------------------------*/
 
@@ -203,17 +198,7 @@ class Mason_element {
         
         //$result .= form_hidden('__element_name__[__index__][settings]', base64_encode(serialize($this->settings)));
         
-        if(!isset($this->cache['assets_loaded']))
-        {
-            $theme_url = rtrim($this->EE->config->item('theme_folder_url'),'/').'/third_party/content_elements/elements/mason/';
-            
-            //$this->EE->cp->add_to_foot('<link rel="stylesheet" href="'.$theme_url.'styles.css" type="text/css" media="screen" />');
-            $this->EE->cp->add_to_foot('<script type="text/javascript" src="'.$theme_url.'publish.js"></script>');			
-            
-            //all loaded, remember it!
-            
-            $this->cache['assets_loaded'] = TRUE;
-        }
+        $this->_load_asset('publish.js');
         
         $result .= '<input type="hidden" name="'.$field_name.'['.$mason_id.'][data]" value="'.$mason_id.'" />';
         
@@ -362,7 +347,7 @@ class Mason_element {
         }
         
         $result = '';
-        
+
         $tagdata = str_replace(LD.'block_name'.RD, $this->element_name, $tagdata);
         
         if(isset($this->settings['mason_elements']))
@@ -426,6 +411,8 @@ class Mason_element {
     {
         /* Display backend settings to configured elements that make up this block */
         
+        $this->_load_asset('settings.js');
+        
         // Get a list of installed elements
         $content_elements = $this->EE->elements->fetch_avaiable_elements();
         $element_options = array();
@@ -452,15 +439,15 @@ class Mason_element {
                 $settings[] = array(
                         lang('mason_title') . ' ' . $i,
                         form_hidden('field_eid]['.$i, $element_config['settings']['eid']) .
-                        form_input('field_title]['.$i, $element_config['title']),
+                        form_input('field_title]['.$i, $element_config['title'], 'class="field_title"'),
                     );
                 $settings[] = array(
                         lang('mason_name') . ' ' . $i,
-                        form_input('field_name]['.$i, $element_config['name']),
+                        form_input('field_name]['.$i, $element_config['name'], 'class="field_name"'),
                     );
                 $settings[] = array(
                         lang('mason_type'),
-                        form_dropdown('field_type]['.$i, $element_options, $element_config['type']),
+                        form_dropdown('field_type]['.$i, $element_options, $element_config['type'], 'class="field_type"'),
                     );
                 
                 if(!isset($element_config['settings']))
@@ -512,15 +499,15 @@ class Mason_element {
         $settings[] = array(
                 lang('mason_title') . ' (New)',
                 form_hidden('field_eid]['.$i, '__eid__') .
-                form_input('field_title]['.$i),
+                form_input('field_title]['.$i, '', 'class="field_title"'),
             );
         $settings[] = array(
                 lang('mason_name'),
-                form_input('field_name]['.$i),
+                form_input('field_name]['.$i, '', 'class="field_name"'),
             );
         $settings[] = array(
                 lang('mason_type'),
-                form_dropdown('field_type]['.$i, $element_options, 'text_field') . ' (Save to see Element options)',
+                form_dropdown('field_type]['.$i, $element_options, 'text_field',  'class="field_type"') . ' (Save to see Element options)',
             );
         
         return $settings;
@@ -530,7 +517,16 @@ class Mason_element {
     {
         /* Compose parallel element configuration arrays into a single array of arrays */
         
-        $data['mason_name'] = $this->element_name;
+        /*
+        echo '<pre>';
+        var_dump($data);
+        
+                
+        echo '<b>element_settings=</b>';
+        var_dump($this->settings);
+        // */
+        
+        $data['mason_name'] = isset($this->element_name) ? $this->element_name : '';
         $data['mason_elements'] = array();
         
         foreach($data['field_name'] as $i => $field_name)
@@ -539,7 +535,7 @@ class Mason_element {
             
             $field_title = $data['field_title'][$i];
             $field_type = $data['field_type'][$i];
-            $field_settings = $data['field_settings'][$i];
+            $field_settings = (isset($data['field_settings']) && is_array($data['field_settings'])) ? $data['field_settings'][$i] : array();
             $field_eid = $data['field_eid'][$i];
             
             if($field_eid == '__eid__')
@@ -564,7 +560,7 @@ class Mason_element {
         }
         
         $data['settings'] = array(
-            'name' => $this->element_name,
+            'name' => isset($this->element_name) ? $this->element_name : '',
             'title' => isset($data['title']) ? $data['title'] : ''
         );
         
@@ -574,7 +570,10 @@ class Mason_element {
         unset($data['field_type']);
         unset($data['field_settings']);
         
-        
+        /*
+        var_dump($data);
+        exit;
+        */
         return $data;
     }
     
@@ -690,6 +689,16 @@ class Mason_element {
             unset($settings["eid"]);
         }
         return $settings;
+    }
+    
+    private function _load_asset($asset)
+    {
+        if(!isset($this->cache['assets_loaded']))
+        {
+            $theme_url = rtrim($this->EE->config->item('theme_folder_url'),'/').'/third_party/content_elements/elements/mason/';
+            $this->EE->cp->add_to_foot('<script type="text/javascript" src="'.$theme_url.$asset.'"></script>');			
+            $this->cache['assets_loaded'] = TRUE;
+        }
     }
     
 }

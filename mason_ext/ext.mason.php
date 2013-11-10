@@ -38,7 +38,7 @@
                 element to gather it's data prior to Content Elements
                 processing.
   Written for : PHP 5.2+, ExpressionEngine 2.5.3+, Content Elements 1.1.0+
-  Usage       : Install under this location the third part directory:
+  Usage       : Install under this location in the third party directory:
                 system/expressionengine/third_party/mason/
                 You must also install the Mason element within the Content
                 Elements directory.
@@ -93,7 +93,10 @@ class Mason_ext {
             echo '<b>RAW POST:</b><br/>';
             var_dump($_POST);
             echo 'running...';
+            exit;
             // */
+            
+            
             foreach($_POST['mason'] as $mason_id => $mason_config)
             {
                 foreach($mason_config['sub_elements'] as $sub_element_hash => $sub_element_type)
@@ -114,11 +117,117 @@ class Mason_ext {
         }
         
         /*
+        
+        if(isset($_GET['C']) && $_GET['C'] == 'admin_content' &&
+           isset($_GET['M']) && $_GET['M'] == 'field_edit' &&
+           isset($_POST['content_element']))
+        {
+            $field_id = $_POST['field_id'];
+            $query = $this->EE->db->where('field_id', $field_id)->get('channel_fields');
+            $row = $query->row();
+            $field_settings = unserialize(base64_decode($row->field_settings));
+            
+            $content_elements = unserialize($field_settings['content_elements']);
+            echo '<pre>';
+            //var_dump($_POST);
+            
+            foreach($content_elements as $i => $element)
+            {
+                $type = $element['type'];
+                if($type != 'mason') continue;
+                
+                $eid = $element['settings']['eid'];
+                $mason_elements = $element['settings']['mason_elements'];
+                
+                foreach($mason_elements as $j => $subelement)
+                {
+                    echo "<b>found subelement</b>\n";
+                    var_dump($subelement);
+                    
+                    $subelement_type = $subelement['type'];
+                    $subelement_eid = $subelement['settings']['eid'];
+                    $subelement_settings = $subelement['settings'];
+                    
+                    if(!isset($_POST['content_element']['mason'][$eid]['field_eid'][$j+1]))
+                    {
+                        $_POST['content_element']['mason'][$eid]['field_eid'][$j+1] = $subelement_eid;
+                    }
+                    
+                    foreach($subelement_settings as $setting => $value)
+                    {
+                        if(!isset($_POST['content_element']['mason'][$eid]['field_settings'][$j+1][$setting]))
+                        {
+                            echo "preserve settings from db ".$setting .'='.$value."\n";
+                            $_POST['content_element']['mason'][$eid]['field_settings'][$j+1][$setting] = $value;
+                        }
+                        
+                        //if(!isset($_POST['content_element']['mason'][$eid][$setting][$j+1]))
+                        //{
+                        //    //echo $setting .'='.$value."\n";
+                        //    $_POST['content_element']['mason'][$eid][$setting][$j+1] = $value;
+                        //}
+                    }
+                    
+                    
+                }
+                
+                
+            }
+            
+            
+            
+            echo '<pre>post=';
+            var_dump($_POST['content_element']['mason']);
+            exit;
+            */
+            
+            /*
+            $str = $_POST['mason_settings'];
+            if($str[0] == '{' && $str[strlen($str)-1] == '}')
+            {
+                //echo "<pre>parsing\n";
+                $mason_settings = json_decode($_POST['mason_settings']);
+                // TODO: Need to parse the keys of this into actual arrays within $_POST so that the rest of the
+                // code will continue to function normally
+                foreach($mason_settings as $key => $value)
+                {
+                    // Parse the key pattern content_elements[mason][*][*][*]
+                    //echo $key.'<br/>';
+                    if(preg_match('#content_element'.str_repeat('\[(.*?)\]', substr_count($key, '[')).'#', $key, $matches))
+                    {
+                        for($i = 1; $i < count($matches); $i++)
+                        {
+                            echo $matches[$i]."\n";
+                            if($i < count($matches) - 1)
+                            {
+                                
+                            }
+                        }
+                    }
+                }
+            }
+            
+            //exit;
+            
+
+            //echo '<b>RAW POST:</b><br/>';
+            //var_dump($_POST);
+            //echo 'running...';
+            //exit;
+
+        }
+        */
+        /*
         echo '<pre>';
         echo 'IN EXTENSION:';
         print_r($_POST);
         echo '</pre>';
         // */
+        
+    }
+    
+    function _set_post_value($depth, $key, $value)
+    {
         
     }
 
