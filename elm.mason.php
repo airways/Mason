@@ -412,6 +412,7 @@ class Mason_element {
         /* Display backend settings to configured elements that make up this block */
         
         $this->_load_asset('settings.js');
+        $this->_load_asset('screen.css');
         
         // Get a list of installed elements
         $content_elements = $this->EE->elements->fetch_avaiable_elements();
@@ -426,27 +427,29 @@ class Mason_element {
         
         $settings = array();
         
+        $label_width = 'width="150"';
+            
         // Load settings for each of the configured elements
         $i = 0;
         
         if(isset($data['mason_elements']))
         {
-
             foreach($data['mason_elements'] as $element_config)
             {
                 //var_dump($element_config);
+                $settings_block = array();
                 $i++;
-                $settings[] = array(
-                        lang('mason_title') . ' ' . $i,
+                $settings_block[] = array(
+                        $label_width => lang('mason_title'), // . ' ' . $i,
                         form_hidden('field_eid]['.$i, $element_config['settings']['eid']) .
                         form_input('field_title]['.$i, $element_config['title'], 'class="field_title"'),
                     );
-                $settings[] = array(
-                        lang('mason_name') . ' ' . $i,
+                $settings_block[] = array(
+                        $label_width => lang('mason_name'), // . ' ' . $i,
                         form_input('field_name]['.$i, $element_config['name'], 'class="field_name"'),
                     );
-                $settings[] = array(
-                        lang('mason_type'),
+                $settings_block[] = array(
+                        $label_width => lang('mason_type'),
                         form_dropdown('field_type]['.$i, $element_options, $element_config['type'], 'class="field_type"'),
                     );
                 
@@ -455,8 +458,10 @@ class Mason_element {
                     $element_config['field_settings'] = array();
                 }
                 
+                
                 // Load settings for this element
                 $element_type = $element_config['type'];
+                
                 if(method_exists($this->EE->elements->$element_type->handler, 'display_element_settings'))
                 {
                     $element_settings = $this->EE->elements->$element_type->handler->display_element_settings(
@@ -480,7 +485,7 @@ class Mason_element {
                                 }
                                 $element_setting[$key] = $value;
                             }
-                            $settings[] = $element_setting;
+                            $settings_block[] = $element_setting;
                         }
                        
                         //echo htmlspecialchars(print_r($settings, true));
@@ -488,7 +493,8 @@ class Mason_element {
                     }
                 }
                 
-                $settings[] = array('<hr/>', '<hr/>');
+                
+                $settings[] = $settings_block;
             }
         }
         
@@ -497,19 +503,29 @@ class Mason_element {
         
         // Add blank settings fields to be used to add a new element
         $settings[] = array(
-                lang('mason_title') . ' (New)',
+            array(
+                'colspan="3"' => '<h4>'.lang('mason_add_heading').'</h4>'
+            ),
+            array(
+                $label_width => lang('mason_title'),
                 form_hidden('field_eid]['.$i, '__eid__') .
                 form_input('field_title]['.$i, '', 'class="field_title"'),
-            );
-        $settings[] = array(
-                lang('mason_name'),
+            ),
+            array(
+                $label_width => lang('mason_name'),
                 form_input('field_name]['.$i, '', 'class="field_name"'),
-            );
-        $settings[] = array(
-                lang('mason_type'),
+            ),
+            array(
+                $label_width => lang('mason_type'),
                 form_dropdown('field_type]['.$i, $element_options, 'text_field',  'class="field_type"') . ' (Save to see Element options)',
-            );
+            ),
+            array(
+                $label_width => '',
+                form_submit('add_subelement', lang('mason_add_subelement'), 'class="submit mason_add_subelement"')
+            ),
+        );
         
+        $settings = $this->EE->load->view('../elements/mason/views/settings_table', array('settings' => $settings), TRUE);
         return $settings;
     }
     
@@ -693,11 +709,16 @@ class Mason_element {
     
     private function _load_asset($asset)
     {
-        if(!isset($this->cache['assets_loaded']))
+        if(!isset($this->cache['assets_loaded'][$asset]))
         {
             $theme_url = rtrim($this->EE->config->item('theme_folder_url'),'/').'/third_party/content_elements/elements/mason/';
-            $this->EE->cp->add_to_foot('<script type="text/javascript" src="'.$theme_url.$asset.'"></script>');			
-            $this->cache['assets_loaded'] = TRUE;
+            if(substr($asset, -2, 2) == 'js')
+            {
+                $this->EE->cp->add_to_foot('<script type="text/javascript" src="'.$theme_url.$asset.'"></script>');			
+            } else {
+                $this->EE->cp->add_to_foot('<link rel="stylesheet" href="'.$theme_url.$asset.'" type="text/css" media="screen" />');			
+            }
+            $this->cache['assets_loaded'][$asset] = TRUE;
         }
     }
     

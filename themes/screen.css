@@ -1,0 +1,81 @@
+.ce_settings_mason .element_bottom {
+    border-bottom: 1px dashed #AAA;
+    margin-left: -8px;
+    margin-right: -14px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.ce_settings_mason tr {
+
+}
+
+.ce_settings_mason .mason_block_handle {
+	display: block;
+	background: none;
+	width: 9px;
+	height: 13px;
+    float: left;
+}
+
+.ce_settings_mason .mason_block_element table {
+    width: 90%;
+    position: relative;
+    left: 10px;
+    top: -8px;
+}
+
+.ce_settings_mason .mason_block_element:hover table {
+
+}
+.ce_settings_mason .mason_block_element:hover .mason_block_handle {
+	display: block;
+	background: url(images/draggable.gif);	
+	height: 13px;
+	width: 9px;	
+	cursor: pointer;
+}
+.ce_settings_mason .mason_add_subelement {
+    color: #4A575F;
+    text-decoration: none !important;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    padding: 6px 10px 6px 10px;
+    margin-right: 10px;
+    font-size: 11px;
+    background: #D2DBE3 url(../images/btn_default.jpg);
+    box-shadow: 0px 0px 2px #D2DBE3;
+    height: 28px;
+}
+.ce_settings_mason h4 {
+    margin-bottom: 10px;
+}
+
+.ce_settings_mason .mason_block_element:hover .mason_button_remove {
+    display: block;
+    float: right;
+    color: red;
+    height: 7px;
+    width: 7px;
+    text-align: center;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 10px;
+    cursor: pointer;
+    background: url(images/btn_delete.png);
+    position: relative;
+    right: 1px;
+    top: -5px;
+}
+
+.ce_settings_mason .last .mason_block_handle,
+.ce_settings_mason .last .mason_button_remove,
+.ce_settings_mason .last:hover .mason_block_handle,
+.ce_settings_mason .last:hover .mason_button_remove {
+    display: none;
+}
+
+.ce_settings_mason .last table {
+    left: 19px;
+}
