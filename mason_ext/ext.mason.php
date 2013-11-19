@@ -98,14 +98,6 @@ class Mason_ext {
            isset($_GET['M']) && $_GET['M'] == 'entry_form' &&
            isset($_POST['mason']))
         {
-            /*
-            echo '<b>RAW POST:</b><br/>';
-            var_dump($_POST);
-            echo 'running...';
-            exit;
-            // */
-            
-            
             foreach($_POST['mason'] as $mason_id => $mason_config)
             {
                 foreach($mason_config['sub_elements'] as $sub_element_hash => $sub_element_type)
@@ -125,126 +117,8 @@ class Mason_ext {
             }
         }
         
-        
-        
-        if(isset($_GET['C']) && $_GET['C'] == 'admin_content' &&
-           isset($_GET['M']) && $_GET['M'] == 'field_edit' &&
-           isset($_POST['content_element']))
-        {
-        
-            register_shutdown_function('mason_exit_handler');
-        }
-        
-        /*
-            $field_id = $_POST['field_id'];
-            $query = $this->EE->db->where('field_id', $field_id)->get('channel_fields');
-            $row = $query->row();
-            $field_settings = unserialize(base64_decode($row->field_settings));
-            
-            $content_elements = unserialize($field_settings['content_elements']);
-            echo '<pre>';
-            //var_dump($_POST);
-            
-            foreach($content_elements as $i => $element)
-            {
-                $type = $element['type'];
-                if($type != 'mason') continue;
-                
-                $eid = $element['settings']['eid'];
-                $mason_elements = $element['settings']['mason_elements'];
-                
-                foreach($mason_elements as $j => $subelement)
-                {
-                    echo "<b>found subelement</b>\n";
-                    var_dump($subelement);
-                    
-                    $subelement_type = $subelement['type'];
-                    $subelement_eid = $subelement['settings']['eid'];
-                    $subelement_settings = $subelement['settings'];
-                    
-                    if(!isset($_POST['content_element']['mason'][$eid]['field_eid'][$j+1]))
-                    {
-                        $_POST['content_element']['mason'][$eid]['field_eid'][$j+1] = $subelement_eid;
-                    }
-                    
-                    foreach($subelement_settings as $setting => $value)
-                    {
-                        if(!isset($_POST['content_element']['mason'][$eid]['field_settings'][$j+1][$setting]))
-                        {
-                            echo "preserve settings from db ".$setting .'='.$value."\n";
-                            $_POST['content_element']['mason'][$eid]['field_settings'][$j+1][$setting] = $value;
-                        }
-                        
-                        //if(!isset($_POST['content_element']['mason'][$eid][$setting][$j+1]))
-                        //{
-                        //    //echo $setting .'='.$value."\n";
-                        //    $_POST['content_element']['mason'][$eid][$setting][$j+1] = $value;
-                        //}
-                    }
-                    
-                    
-                }
-                
-                
-            }
-            
-            
-            
-            echo '<pre>post=';
-            var_dump($_POST['content_element']['mason']);
-            exit;
-            */
-            
-            /*
-            $str = $_POST['mason_settings'];
-            if($str[0] == '{' && $str[strlen($str)-1] == '}')
-            {
-                //echo "<pre>parsing\n";
-                $mason_settings = json_decode($_POST['mason_settings']);
-                // TODO: Need to parse the keys of this into actual arrays within $_POST so that the rest of the
-                // code will continue to function normally
-                foreach($mason_settings as $key => $value)
-                {
-                    // Parse the key pattern content_elements[mason][*][*][*]
-                    //echo $key.'<br/>';
-                    if(preg_match('#content_element'.str_repeat('\[(.*?)\]', substr_count($key, '[')).'#', $key, $matches))
-                    {
-                        for($i = 1; $i < count($matches); $i++)
-                        {
-                            echo $matches[$i]."\n";
-                            if($i < count($matches) - 1)
-                            {
-                                
-                            }
-                        }
-                    }
-                }
-            }
-            
-            //exit;
-            
-
-            //echo '<b>RAW POST:</b><br/>';
-            //var_dump($_POST);
-            //echo 'running...';
-            //exit;
-
-        }
-        */
-        /*
-        echo '<pre>';
-        echo 'IN EXTENSION:';
-        print_r($_POST);
-        echo '</pre>';
-        // */
-        
     }
     
-    function _set_post_value($depth, $key, $value)
-    {
-        
-    }
-
     function disable_extension()
     {
         $this->EE->db->where('class', __CLASS__);
@@ -279,14 +153,6 @@ class Mason_ext {
 		return BASE;
 	}
 
-
-    
-    // ----------------------------------------------------------------------
-}
-
-
-function mason_exit_handler() {
-    
 }
 
 /* End of file ext.mason.php */
