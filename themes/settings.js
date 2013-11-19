@@ -25,11 +25,18 @@ var mason_settings = {
 			tolerance: 'pointer',
 			opacity: 0,
 			cursor: 'move',
+			forcePlaceholderSizeType: true,
 			stop: function(e, ui) {
 				//restore all ck_editors data in the tile	
 				$('.ce_settings_wrapper').removeAttr('style');
 			}
 		}); 
+		
+		$('.mason_button_remove').unbind('click').click(function(event) {
+		    $(this).closest('.mason_block_element').remove();
+		    event.preventDefault();
+		    return false;
+		});
 		
     },
     make_name: function(s) {

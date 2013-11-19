@@ -82,8 +82,17 @@ class Mason_ext {
         
     }
 
-    public function sessions_end()
+    public function sessions_end($sess)
     {
+        $this->EE->session = $sess;
+        if($mason_redirect = $this->EE->session->flashdata('mason_redirect'))
+        {
+            list($field_id, $mason_id) = explode('|', $mason_redirect);
+            $mason_id = 'element_modified_type';
+            $this->set_base();
+            $this->EE->functions->redirect(BASE.AMP.'C=admin_content'.AMP.'M=field_edit'.AMP.'field_id='.$field_id.'#'.$mason_id);
+        }
+        
         // Strip data from the post for sub-elements
         if(isset($_GET['C']) && $_GET['C'] == 'content_publish' &&
            isset($_GET['M']) && $_GET['M'] == 'entry_form' &&
@@ -116,12 +125,17 @@ class Mason_ext {
             }
         }
         
-        /*
+        
         
         if(isset($_GET['C']) && $_GET['C'] == 'admin_content' &&
            isset($_GET['M']) && $_GET['M'] == 'field_edit' &&
            isset($_POST['content_element']))
         {
+        
+            register_shutdown_function('mason_exit_handler');
+        }
+        
+        /*
             $field_id = $_POST['field_id'];
             $query = $this->EE->db->where('field_id', $field_id)->get('channel_fields');
             $row = $query->row();
@@ -245,7 +259,34 @@ class Mason_ext {
         }
     }
     
+    function set_base()
+    {
+        if(defined('BASE')) return BASE;
+        
+		$s = 0;
+
+		switch ($this->EE->config->item('admin_session_type'))
+		{
+			case 's'	:
+				$s = $this->EE->session->userdata('session_id', 0);
+				break;
+			case 'cs'	:
+				$s = $this->EE->session->userdata('fingerprint', 0);
+				break;
+		}
+
+		define('BASE', SELF.'?S='.$s.'&amp;D=cp'); // cp url
+		return BASE;
+	}
+
+
+    
     // ----------------------------------------------------------------------
+}
+
+
+function mason_exit_handler() {
+    
 }
 
 /* End of file ext.mason.php */

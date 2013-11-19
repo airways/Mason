@@ -410,6 +410,7 @@ class Mason_element {
     function display_element_settings($data)
     {
         /* Display backend settings to configured elements that make up this block */
+        $_SESSION['mason_old_settings_'.$this->EE->input->get_post('field_id')] = $data;
         
         $this->_load_asset('settings.js');
         $this->_load_asset('screen.css');
@@ -525,7 +526,12 @@ class Mason_element {
             ),
         );
         
-        $settings = $this->EE->load->view('../elements/mason/views/settings_table', array('settings' => $settings), TRUE);
+        $vars = array(
+            'settings' => $settings,
+            'field_types_changed' => isset($data['field_types_changed']) ? $data['field_types_changed'] : false
+        );
+        
+        $settings = $this->EE->load->view('../elements/mason/views/settings_table', $vars, TRUE);
         return $settings;
     }
     
@@ -586,11 +592,32 @@ class Mason_element {
         unset($data['field_type']);
         unset($data['field_settings']);
         
-        /*
-        var_dump($data);
-        exit;
-        */
+        $old_data = $_SESSION['mason_old_settings_'.$this->EE->input->get_post('field_id')];
+        $data['field_types_changed'] = $this->field_types_changed($old_data, $data);
+        
         return $data;
+    }
+    
+    function field_types_changed($old_data, $data)
+    {
+        $result = false;
+        
+        foreach(array_keys($data) as $k)
+        {
+            if($k == 'type' && (!isset($old_data[$k]) || $old_data[$k] != $data[$k]))
+            {
+                $field_id = $this->EE->input->get_post('field_id');
+                $field_id = $this->EE->session->set_flashdata('mason_redirect', $field_id.'|');
+                return true;
+            }
+            
+            if(is_array($data[$k]))
+            {
+                $result = $result || $this->field_types_changed($old_data[$k], $data[$k]);
+            }
+        }
+        
+        return $result;
     }
     
     function preview_element($data)

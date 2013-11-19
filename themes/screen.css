@@ -18,6 +18,16 @@
     float: left;
 }
 
+.ce_settings_mason .mason_block_element > td {
+    width: 10% !important;
+    border: 1px solid red !important;
+    background: #ebf0f2 !important;
+}
+
+table.mainTable td .ce_settings_table tr.mason_block_element td {
+    background: #f7f8fa !important;
+}
+
 .ce_settings_mason .mason_block_element table {
     width: 90%;
     position: relative;
@@ -65,7 +75,7 @@
     cursor: pointer;
     background: url(images/btn_delete.png);
     position: relative;
-    right: 1px;
+    right: -4px;
     top: -5px;
 }
 
@@ -78,4 +88,13 @@
 
 .ce_settings_mason .last table {
     left: 19px;
+}
+
+.warning {
+    background: #FFF3D1;
+    border: 1px solid #FFE59C;
+    border-radius: 5px 5px 5px 5px;
+    color: #715300;
+    margin-bottom: 20px;
+    padding: 10px;
 }
