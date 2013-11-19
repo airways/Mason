@@ -2,6 +2,7 @@
 
 // @version 1.01
 // @element
+// @dir mason
 
 define('MASON_VERSION', '1.01');
 define('MASON_NAME', 'Mason');
