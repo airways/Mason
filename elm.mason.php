@@ -527,9 +527,9 @@ class Mason_element {
     
     function prep_handler($element_type, $settings)
     {
-        $this->EE->elements->$element_type->handler->element_name  = $settings["title"];	
-        $this->EE->elements->$element_type->handler->element_title  = $settings["title"];	
-        $this->EE->elements->$element_type->handler->element_id  = $settings["eid"];	
+        $this->EE->elements->$element_type->handler->element_name  = $settings["title"];
+        $this->EE->elements->$element_type->handler->element_title  = $settings["title"];
+        $this->EE->elements->$element_type->handler->element_id  = $settings["eid"];
     }
     
     function random_string($length = 16)
