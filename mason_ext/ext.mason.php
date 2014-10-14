@@ -94,9 +94,7 @@ class Mason_ext {
         }
         
         // Strip data from the post for sub-elements
-        if(isset($_GET['C']) && $_GET['C'] == 'content_publish' &&
-           isset($_GET['M']) && $_GET['M'] == 'entry_form' &&
-           isset($_POST['mason']))
+        if(isset($_POST['mason_entry_form']) && isset($_POST['mason']))
         {
             foreach($_POST['mason'] as $mason_id => $mason_config)
             {
@@ -107,7 +105,8 @@ class Mason_ext {
                         if(is_array($array) && isset($array[$sub_element_hash]) && isset($array[$sub_element_hash]['mason_id']))
                         {
                             $mason_id = $array[$sub_element_hash]['mason_id'];
-                            $element_settings = unserialize(base64_decode($_POST[$field][$sub_element_hash]['element_settings']));
+                            // This variable is never referenced again....
+                            // $element_settings = unserialize(base64_decode($_POST[$field][$sub_element_hash]['element_settings']));
                             $_POST['mason'][$mason_id]['sub_elements'][$sub_element_hash] = $_POST[$field][$sub_element_hash];
                             unset($_POST[$field][$sub_element_hash]);
                         }
@@ -116,7 +115,6 @@ class Mason_ext {
                 }
             }
         }
-        
     }
     
     function disable_extension()

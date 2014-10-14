@@ -6,6 +6,7 @@ function ce_mason_init(data) {
         var hash_pattern = /(.*)\[(.*)\]\[.*\]/;
         console.log($container.find('input[type=hidden]'));
         var match = hash_pattern.exec($container.find('input[type=hidden][value=mason]').attr('name'));
+        if(!match) return;
         var field_name = match[1];
         var hash_key = match[2];
         if(!field_name || !hash_key) return;

@@ -1,7 +1,7 @@
 Mason
 =====
 
-Mason is a "content block" element design to work with the Content Elements fieldtype in ExprssionEngine. You can use Mason to create reusable blocks of fields/elements which can be placed on to a page as many times as needed, in any order, and which remain bound together as a single piece of data.
+Mason is a "content block" element design to work with the Content Elements fieldtype in ExpressionEngine. You can use Mason to create reusable blocks of fields/elements which can be placed on to a page as many times as needed, in any order, and which remain bound together as a single piece of data.
 
 Beta
 ----
