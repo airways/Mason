@@ -75,8 +75,6 @@ class Mason_element {
         
         if($mason_id && isset($this->settings['mason_elements']))
         {
-            // var_dump($matches);
-
             foreach($this->settings['mason_elements'] as $element_config)
             {
                 
@@ -88,7 +86,7 @@ class Mason_element {
                 //echo 'Try to save:';
                 //var_dump($element_eid);
                 
-                // If a field is left blank, it will not be present in POST data
+                // If a field is left blank, it will not be present in POST data ??
                 if (isset($_POST['mason'][$mason_id]['sub_elements']))
                 {
                     foreach($_POST['mason'][$mason_id]['sub_elements'] as $new_eid => $sub_element_data)
@@ -232,10 +230,6 @@ class Mason_element {
         // echo '<h4>tagdata:</h4>';
         // var_dump($tagdata);
         // exit;
-
-
-
-
 
 
         /* Loop through configured elements, replacing each one for the frontend */
@@ -471,8 +465,8 @@ class Mason_element {
 
             // If being saved for the first time, the setting will not be present
             $field_settings = (isset($data['field_settings']) && is_array($data['field_settings']) && isset($data['field_settings'][$i])) ? $data['field_settings'][$i] : array('test' => 'this is');
-            echo 'field settings = ';
-            var_dump($field_settings);
+            // echo 'field settings = ';
+            // var_dump($field_settings);
             $field_eid = $data['field_eid'][$i];
             $field_order = $data['field_order'][$i];
             
