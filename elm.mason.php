@@ -45,7 +45,7 @@ class Mason_element {
 
     public $info = array(
         'name'    => 'Mason',
-        'version'    => '1.0.0'
+        'version'    => '1.0.6'
     );
     
     public $settings = array();
@@ -161,6 +161,13 @@ class Mason_element {
                 $element_type = $element_config['type'];
                 $element_eid = $element_config['eid'];
                 $element_settings = $element_config['settings'];
+                /*
+                echo '<pre>';
+                var_dump($element_type);
+                var_dump($element_settings);
+                echo '</pre>';
+                */
+                //if(isset($element_settings[$element_type])) $element_settings = $element_settings[$element_type];
                 
                 if(isset($this->EE->elements->$element_type) && method_exists($this->EE->elements->$element_type->handler, 'display_element'))
                 {
@@ -479,10 +486,16 @@ class Mason_element {
                 $field_eid = $this->random_string();
             }
             
+            
+            if(method_exists($this->EE->elements->$field_type->handler, 'save_element_settings'))
+            {
+                $field_settings = $this->EE->elements->$field_type->handler->save_element_settings($field_settings);
+            }
+            
             $field_settings['title'] = $field_title;
             $field_settings['element'] = $field_type;
             $field_settings['eid'] = $field_eid;
-            
+
             if($field_name && $field_type)
             {
                 $data['mason_elements'][] = array(

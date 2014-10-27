@@ -4,7 +4,7 @@ function ce_mason_init(data) {
         
         // Create new hashes for each subelement
         var hash_pattern = /(.*)\[(.*)\]\[.*\]/;
-        console.log($container.find('input[type=hidden]'));
+        //console.log($container.find('input[type=hidden]'));
         var match = hash_pattern.exec($container.find('input[type=hidden][value=mason]').attr('name'));
         if(!match) return;
         var field_name = match[1];
@@ -43,7 +43,7 @@ function ce_mason_init(data) {
             
             $this.html(html);
             
-            console.log($this.html());
+            //console.log($this.html());
             
             // Dispatch event to subelements
             ContentElements.callback('display', sub_type, $this);
@@ -55,7 +55,15 @@ ContentElements.bind('mason', 'display', function(data) {
     ce_mason_init($(data));
 });
 
-$(window).load(function()
+$(window).ready(function()
 {
-	ce_mason_init($('.mason_container'));
+    //ce_mason_init($('.mason_container'));
+    // Trigger display event on existing element's fields
+    $('.mason_field').each(function(i, element) {
+        var $this = $(this);
+        var sub_type = $this.attr('data-element-type');
+        if(sub_type != 'wysiwyg') { // Built in Editor fieldtype does it's own display init
+            ContentElements.callback('display', sub_type, $this);
+        }
+    });
 });
