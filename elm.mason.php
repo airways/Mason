@@ -220,16 +220,19 @@ class Mason_element {
     
     function replace_element_tag($data, $params = array(), $tagdata)
     {
-        // echo '<h3>replace_element_tag for mason element</h3>';
-        // echo '<h4>data:</h4>';
-        // var_dump($data);
-        // echo '<h4>settings:</h4>';
-        // var_dump($this->settings);
-        // echo '<h4>params:</h4>';
-        // var_dump($params);
-        // echo '<h4>tagdata:</h4>';
-        // var_dump($tagdata);
-        // exit;
+        /*
+        echo '<h3>replace_element_tag for mason element</h3><pre>';
+        echo '<h4>data:</h4>';
+        var_dump($data);
+        echo '<h4>settings:</h4>';
+        var_dump($this->settings);
+        echo '<h4>params:</h4>';
+        var_dump($params);
+        echo '<h4>tagdata:</h4>';
+        var_dump($tagdata);
+        echo '</pre>';
+        exit;
+        //*/
 
 
         /* Loop through configured elements, replacing each one for the frontend */
@@ -291,6 +294,7 @@ class Mason_element {
                     {
                         // var_dump($load_data['element_data']);
                         // var_dump($element_eid);
+                        $parse_result = $this->EE->elements->$element_type->handler->settings = $element_settings;
                         $parse_result = $this->EE->elements->$element_type->handler->replace_element_tag($load_data['element_data'][$element_eid], $params, $block);
                     } else {
                         $parse_result = $load_data['element_data'][$element_eid];
