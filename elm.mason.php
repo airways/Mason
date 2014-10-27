@@ -335,7 +335,14 @@ class Mason_element {
         {
             if($element_name != 'mason')
             {
-                $element_options[$element_name] = $this->EE->lang->line($element_name.'_element_name');
+                $element_label = $this->EE->lang->line($element_name);
+                if($element_name.'_element_name' != $this->EE->lang->line($element_name.'_element_name'))
+                {
+                    $element_label = $this->EE->lang->line($element_name.'_element_name');
+                }
+                $element_label = str_replace('_', ' ', $element_label);
+                $element_label = ucwords($element_label);
+                $element_options[$element_name] = $element_label;
             }
         }
         
