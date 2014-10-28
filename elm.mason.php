@@ -543,7 +543,7 @@ class Mason_element {
             'title' => isset($data['title']) ? $data['title'] : ''
         );
         
-        $dirty_flags = isset($data['field_dirty']) ? $data['field_dirty'] : array();
+        $field_dirty = isset($data['field_dirty']) ? $data['field_dirty'] : array();
         
         // Remove parallel arrays from data to be saved
         unset($data['field_title']);
@@ -559,7 +559,18 @@ class Mason_element {
         //if(array_key_exists('field_eid', $data)) $old_data = $_SESSION['mason_old_settings_'.$data['field_eid']];
         //else $old_data = array();
         //$data['field_types_changed'] = $this->field_types_changed($old_data, $data);
-        $data['field_types_changed'] = count($field_dirty) > 0;
+        $data['field_types_changed'] = false;
+        foreach($field_dirty as $hash => $dirty) {
+            //echo $hash;
+            if($dirty && strpos($hash, 'field_type_') !== false) {
+                //echo 'DIRTY!';
+                $data['field_types_changed'] = true;
+                $field_id = $this->EE->input->get_post('field_id');
+                $this->EE->session->set_flashdata('mason_redirect', $field_id.'|');
+            }
+            //echo '<br/>';
+        }
+        //exit;
 
         // echo '<h4>data after processing</h4>';
         // var_dump($data);
@@ -568,6 +579,7 @@ class Mason_element {
         return $data;
     }
     
+    /*
     function field_types_changed($old_data, $data)
     {
         $result = false;
@@ -584,14 +596,14 @@ class Mason_element {
             {
                 if($k == 'type' && (!isset($old_data['type']) || $old_data['type'] != $data['type']))
                 {
-                    /*echo '<b>Types changed</b><br/>';
-                    var_dump($old_data);
-                    echo '<br/><b>'.$old_data['type'].'</b>';
-                    echo '<hr/>';
-                    var_dump($data);
-                    echo '<br/><b>'.$data['type'].'</b>';
-                    exit;
-                    */
+                    //echo '<b>Types changed</b><br/>';
+                    //var_dump($old_data);
+                    //echo '<br/><b>'.$old_data['type'].'</b>';
+                    //echo '<hr/>';
+                    //var_dump($data);
+                    //echo '<br/><b>'.$data['type'].'</b>';
+                    //exit;
+                    
                     $field_id = $this->EE->input->get_post('field_id');
                     $this->EE->session->set_flashdata('mason_redirect', $field_id.'|');
                     return true;
@@ -606,6 +618,7 @@ class Mason_element {
         
         return $result;
     }
+    */
     
     function preview_element($data)
     {
