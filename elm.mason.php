@@ -41,6 +41,8 @@
   Calls       : Nothing
  -----------------------------------------------------------------------------*/
 
+require_once PATH_THIRD.'mason/config.php';
+
 class Mason_element { 
 
     public $info = array(
@@ -245,7 +247,7 @@ class Mason_element {
         /* Loop through configured elements, replacing each one for the frontend */
         
         $load_data = unserialize(base64_decode($data));
-        // var_dump($load_data);
+        //var_dump($load_data);
         if(isset($load_data['element_data']) && is_array($load_data['element_data']))
         {
             foreach($load_data['element_data'] as $key => $data)
@@ -261,7 +263,16 @@ class Mason_element {
         
         $result = '';
 
-        $tagdata = str_replace(LD.'block_name'.RD, $this->element_name, $tagdata);
+        // Replace block level variables
+        $vars = array(
+            'block_name' => $this->element_name
+        );
+        
+        $tagdata = $this->EE->functions->prep_conditionals($tagdata, $vars);
+        foreach($vars as $var => $val)
+        {
+            $tagdata = str_replace(LD.$var.RD, $val, $tagdata);
+        }
         
         if(isset($this->settings['mason_elements']))
         {
@@ -277,17 +288,28 @@ class Mason_element {
                 
                 if(isset($this->EE->elements->$element_type->handler))
                 {
+                    $this->EE->elements->$element_type->handler->settings = $element_settings;
                     $this->EE->elements->$element_type->handler->element_name = $element_name;
                     
                     $block = false;
                     $match = false;
                     
+                    // Prep conditionals with value for element - strip_tags to work around various issue,
+                    // we really just want to know if a valid value is set or not -- simple string comparison
+                    // will also hopefully work properly
+                    $row_result = $this->EE->functions->prep_conditionals($row_result, array($element_name => (strip_tags($load_data['element_data'][$element_eid]))));
+                    
                     // If the user is not using a closing tag, they just want the value - turn it into
                     // a pair with {value} inbetween
                     if(($pos = strpos($row_result, LD.'/'.$element_name.RD)) === FALSE)
                     {
-                        $row_result = str_replace(LD.$element_name.RD, LD.$element_name.RD.'{value}'.LD.'/'.$element_name.RD, $row_result);
+                        // Make a small template snippet to get value
+                        $tpl = LD.$element_name.RD.'{value}'.LD.'/'.$element_name.RD;
+                        // Replace tag with template snippet
+                        $row_result = str_replace(LD.$element_name.RD, $tpl, $row_result);
+                        
                     }
+                    
                     
                     // Find the block for this field
                     if($count = preg_match($pattern = '#'.LD.$element_name.RD.'(.*?)'.LD.'/'.$element_name.RD.'#s', $row_result, $matches))
@@ -301,7 +323,6 @@ class Mason_element {
                     {
                         // var_dump($load_data['element_data']);
                         // var_dump($element_eid);
-                        $parse_result = $this->EE->elements->$element_type->handler->settings = $element_settings;
                         $parse_result = $this->EE->elements->$element_type->handler->replace_element_tag($load_data['element_data'][$element_eid], $params, $block);
                     } else {
                         $parse_result = $load_data['element_data'][$element_eid];
@@ -322,7 +343,8 @@ class Mason_element {
     {
         /* Display backend settings to configured elements that make up this block */
 
-        $_SESSION['mason_old_settings_'.$this->EE->input->get_post('field_id')] = $data;
+        //$_SESSION['mason_old_settings_'.$this->EE->input->get_post('field_id')] = $data;
+        //if(array_key_exists('field_eid', $data))  $_SESSION['mason_old_settings_'.$data['field_eid']] = $data;
         
         $this->_load_asset('settings.js');
         $this->_load_asset('jquery.form.js');
@@ -363,8 +385,8 @@ class Mason_element {
                 $settings_block[] = array(
                         $label_width => lang('mason_title'), // . ' ' . $i,
                         form_hidden('field_eid]['.$i, $element_config['settings']['eid']) .
-                        pl_form_hidden('field_order]['.$i, $i, false, 'mason_element_order') .
-                        pl_form_hidden('field_command]['.$i, '', false, 'mason_command') .
+                        str_replace('name=', 'id="mason_element_order" name=', form_hidden('field_order]['.$i, $i, false)) .
+                        str_replace('name=', 'id="mason_command" name=', form_hidden('field_command]['.$i, '', false)) .
                         form_input('field_title]['.$i, $element_config['title'], 'class="field_title"'),
                     );
                 $settings_block[] = array(
@@ -462,10 +484,10 @@ class Mason_element {
     {
         /* Compose parallel element configuration arrays into a single array of arrays */
 
-        // echo '<h3>save_element_settings</h3>';
-        // echo '<h4>data before processing</h4>';
-        // var_dump($data);
-        // exit;
+        /*echo '<h3>save_element_settings</h3>';
+        echo '<h4>data before processing</h4>';
+        var_dump($data);
+        exit;*/
         $data['mason_name'] = isset($this->element_name) ? $this->element_name : '';
         $data['mason_elements'] = array();
         // var_dump($data['field_name']);
@@ -521,6 +543,8 @@ class Mason_element {
             'title' => isset($data['title']) ? $data['title'] : ''
         );
         
+        $dirty_flags = isset($data['field_dirty']) ? $data['field_dirty'] : array();
+        
         // Remove parallel arrays from data to be saved
         unset($data['field_title']);
         unset($data['field_name']);
@@ -529,9 +553,13 @@ class Mason_element {
         
         unset($data['field_command']);
         unset($data['field_order']);
+        unset($data['field_dirty']);
 
-        $old_data = $_SESSION['mason_old_settings_'.$this->EE->input->get_post('field_id')];
-        $data['field_types_changed'] = $this->field_types_changed($old_data, $data);
+        //$old_data = $_SESSION['mason_old_settings_'.$this->EE->input->get_post('field_id')];
+        //if(array_key_exists('field_eid', $data)) $old_data = $_SESSION['mason_old_settings_'.$data['field_eid']];
+        //else $old_data = array();
+        //$data['field_types_changed'] = $this->field_types_changed($old_data, $data);
+        $data['field_types_changed'] = count($field_dirty) > 0;
 
         // echo '<h4>data after processing</h4>';
         // var_dump($data);
@@ -554,10 +582,18 @@ class Mason_element {
         {
             if(isset($data[$k]) && isset($old_data[$k]))
             {
-                if($k == 'type' && (!isset($old_data[$k]) || $old_data[$k] != $data[$k]))
+                if($k == 'type' && (!isset($old_data['type']) || $old_data['type'] != $data['type']))
                 {
+                    /*echo '<b>Types changed</b><br/>';
+                    var_dump($old_data);
+                    echo '<br/><b>'.$old_data['type'].'</b>';
+                    echo '<hr/>';
+                    var_dump($data);
+                    echo '<br/><b>'.$data['type'].'</b>';
+                    exit;
+                    */
                     $field_id = $this->EE->input->get_post('field_id');
-                    $field_id = $this->EE->session->set_flashdata('mason_redirect', $field_id.'|');
+                    $this->EE->session->set_flashdata('mason_redirect', $field_id.'|');
                     return true;
                 }
                 
@@ -732,3 +768,4 @@ function array_dump($array, $separators = array(' ')) {
         echo ')';
     }
 }
+

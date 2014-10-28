@@ -38,6 +38,61 @@ var mason_settings = {
             return false;
         });
         
+        var dirty_flag = function() {
+            var $this = $(this);
+            
+            // Save the original value for the field - only do this if this is the first time
+            // the user interacts with this field
+            if(!$this.attr('data-old-val')) {
+                $this.attr('data-old-val', $this.val());
+            }
+
+            // Create an id for the dirty flag
+            //console.log($this.attr('name'));
+            var hash_pattern = /^content_element\[mason\]\[(.*?)\]/;
+            var match = hash_pattern.exec($this.attr('name'));
+            //console.log(match);
+            if(!match) return;
+            var hash_key = match[1];
+            
+            // ID format is field_dirty__array_array_array, for instance:
+            // field_dirty__field_settings_2_height
+            // The double underscore comes from the fact that we include an extra one in the prefix here, and the fact that elements are all arrays
+            var id = 'field_dirty_'+$this.attr('name').replace('content_element[mason]['+hash_key+']', '').replace(/\[/g, '_').replace(/\]/g, '');
+            //console.log(id);
+            
+            // Get the flag (if it exists already)
+            var $dirty = $('#'+id);
+            
+            // If the saved original value is not the current value, set the dirty flag to true
+            if($this.attr('data-old-val') != $this.val()) {
+                // Set a visual indication
+                //$this.css('border', '1px solid red');
+                
+                // If there is no dirty flag element yet, make it with it's value set to true
+                if($dirty.length == 0) {
+                    // We want the name attribute to end up like this, for the given source element:
+                    //  content_element[mason][kUXM4SJbyIJoTd6L][field_settings][2][height]    ->    content_element[mason][kUXM4SJbyIJoTd6L][field_dirty][field_settings_2_height]
+                    $this.after($('<input type="hidden" name="content_element[mason]['+hash_key+']['+id.replace('__', '][')+']" id="'+id+'" value="1" />'));
+                } else {
+                    // Set existing flag to true
+                    $dirty.val('1');
+                }
+            } else {
+                // If the flag was created before, set it to false now
+                if($dirty.length > 0) {
+                    $dirty.val('0');
+                }
+            }
+            //console.log($dirty);
+        }
+        
+        // Bind dirty_flag check to input elements, and turn off autocomplete so that the dirty flag isn't different from displayed values
+        // when pressing browser back button
+        $('.mason_block_element :input').keydown(dirty_flag).keyup(dirty_flag).change(dirty_flag).attr('autocomplete', 'off');
+        $('.mason_block_element select').mousedown(dirty_flag).each(dirty_flag).attr('autocomplete', 'off');
+
+        
     },
     make_name: function(s) {
         var r = s.toLowerCase();
@@ -171,6 +226,6 @@ $(".content_element_add").click(function() {
     setTimeout('mason_settings.bind_events();', 500);
 });
 
-$(function() {
+$(document).ready(function() {
     mason_settings.bind_events();
 });

@@ -46,6 +46,8 @@
   Calls       : Nothing
  -----------------------------------------------------------------------------*/
 
+require_once PATH_THIRD.'mason/config.php';
+
 class Mason_ext {
     
     public $settings        = array();
@@ -84,13 +86,22 @@ class Mason_ext {
 
     public function sessions_end($sess)
     {
+        $this->EE->load->helper('url');
+        
         $this->EE->session = $sess;
         if($mason_redirect = $this->EE->session->flashdata('mason_redirect'))
         {
             list($field_id, $mason_id) = explode('|', $mason_redirect);
             $mason_id = 'element_modified_type';
             $this->set_base();
-            $this->EE->functions->redirect(BASE.AMP.'C=admin_content'.AMP.'M=field_edit'.AMP.'field_id='.$field_id.'#'.$mason_id);
+            
+            //$this->EE->functions->redirect(BASE.AMP.'C=admin_content'.AMP.'M=field_edit'.AMP.'field_id='.$field_id.'#'.$mason_id);
+            //echo 'cp_url='.cp_url('cp/admin_content/field_edit', array('field_id' => $field_id)).'#'.$mason_id;
+            //exit;
+            //header('Location: '.cp_url('cp/admin_content/field_edit', array('field_id' => $field_id)).'#'.$mason_id);
+            //exit;
+            $this->EE->functions->redirect(cp_url('cp/admin_content/field_edit', array('field_id' => $field_id)).'#'.$mason_id);
+            
         }
         
         // Strip data from the post for sub-elements
