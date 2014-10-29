@@ -219,8 +219,8 @@ class Mason_element {
                             // but we need a unique one for each block so that they do not collide
                             $new_eid = $this->random_string();
                         } else {
-                            echo '<hr/><pre><b>display_element element_xid</b> '.__FILE__.':'.__LINE__.PHP_EOL;
-                            print_r($load_data['element_xid']);echo'</pre>';
+                            //echo '<hr/><pre><b>display_element element_xid</b> '.__FILE__.':'.__LINE__.PHP_EOL;
+                            //print_r($load_data['element_xid']);echo'</pre>';
                             // use the same xid we generated last time - assets also likes to store data in other tables
                             // using this id
                             $new_eid = $load_data['element_xid'][$element_eid];
