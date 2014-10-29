@@ -106,7 +106,9 @@ class Mason_ext {
         
         // Strip data from the post for sub-elements
         if(isset($_POST['mason_entry_form']) && isset($_POST['mason']))
-        {
+        {   
+            //echo '<hr/><pre><b>POST</b> '.__FILE__.':'.__LINE__.PHP_EOL;
+            //print_r($_POST);
             foreach($_POST['mason'] as $mason_id => $mason_config)
             {
                 foreach($mason_config['sub_elements'] as $sub_element_hash => $sub_element_type)
@@ -118,6 +120,8 @@ class Mason_ext {
                             $mason_id = $array[$sub_element_hash]['mason_id'];
                             // This variable is never referenced again....
                             // $element_settings = unserialize(base64_decode($_POST[$field][$sub_element_hash]['element_settings']));
+                            //echo '<hr/><pre><b>mason_ext</b> '.__FILE__.':'.__LINE__.PHP_EOL;
+                            //print_r(array('sub_element_hash' => $sub_element_hash, 'field' => $field, 'sub_element_data' => $_POST[$field][$sub_element_hash]));
                             $_POST['mason'][$mason_id]['sub_elements'][$sub_element_hash] = $_POST[$field][$sub_element_hash];
                             unset($_POST[$field][$sub_element_hash]);
                         }
