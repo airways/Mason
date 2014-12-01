@@ -555,12 +555,13 @@ class Mason_element {
                 form_submit('add_subelement', lang('mason_add_subelement'), 'class="submit mason_add_subelement"')
             ),
         );
-        
+
         $vars = array(
+            'int_id' => $data['int_id'],
             'settings' => $settings,
             'field_types_changed' => isset($data['field_types_changed']) ? $data['field_types_changed'] : false
         );
-        
+
         $settings = $this->EE->load->view('../elements/mason/views/settings_table', $vars, TRUE);
         return $settings;
     }
@@ -568,16 +569,42 @@ class Mason_element {
     function save_element_settings($data)
     {
         /* Compose parallel element configuration arrays into a single array of arrays */
-
-        /*echo '<h3>save_element_settings</h3>';
-        echo '<h4>data before processing</h4>';
+        
+        // This ID is used to find the mason block we want
+        $int_id = isset($data['int_id']) ? $data['int_id'] : microtime();
+        
+        $current_settings = $this->_get_field_settings();
+        
+        /*
+        echo '<h3>save_element_settings</h3>';
+        echo '<h4>current field settings</h4>';
+        echo '<pre>';
+        unset($this->EE); unset($this->CE);
+        var_dump($this);
+        var_dump($current_settings);
+        echo '</pre><h4>data before processing</h4>';
+        echo '<pre>';
         var_dump($data);
-        exit;*/
+        echo '</pre>';
+        exit;
+        // */
+        
+        $old_element_settings = array();
+        $old_count = 0;
+        //echo $int_id.'<br/>';
+        foreach($current_settings['content_elements'] as $index => $element_settings) {
+            //echo '<pre>';
+            //var_dump($element_settings);
+            if($element_settings['type'] == 'mason' && $element_settings['settings']['int_id'] == $int_id) {
+                $old_element_settings = $element_settings;
+                $old_count = count($old_element_settings['settings']['mason_elements']);
+            }
+        }
+        
         $data['mason_name'] = isset($this->element_name) ? $this->element_name : '';
-        $old_count = count($data['mason_elements']);
+        $data['int_id'] = $int_id;
         $data['mason_elements'] = array();
-        // var_dump($data['field_name']);
-        // var_dump($data['field_settings']);
+        
         foreach($data['field_name'] as $i => $field_name)
         {
             if(!$field_name) continue;
@@ -647,6 +674,15 @@ class Mason_element {
         //$data['field_types_changed'] = $this->field_types_changed($old_data, $data);
         
         $data['field_types_changed'] = count($data['mason_elements']) > $old_count;
+        /*
+        if($data['field_types_changed']) {
+            echo '<pre>';
+            var_dump($data['mason_elements']);
+            echo 'count = '.count($data['mason_elements']).PHP_EOL;
+            echo 'old_count = '.$old_count.PHP_EOL;
+            exit;
+        }
+        //*/
         if(!$data['field_types_changed']) {
             foreach($field_dirty as $hash => $dirty) {
                 //echo $hash;
@@ -847,7 +883,28 @@ class Mason_element {
         }
     }
     
-    
+    private function _get_field_settings($field_id=null)
+    {
+        if(is_null($field_id)) {
+            $field_id = $this->EE->input->get_post('field_id');
+            if(!$field_id) {
+                throw new Exception('_get_field_settings called without field_id and without context giving a field_id');
+            }
+        }
+        $row =$this->EE->db->where('field_id', $field_id)
+                            ->get('exp_channel_fields')
+                            ->row();
+        if($row->field_settings) {
+            $settings = unserialize(base64_decode($row->field_settings));
+            if(isset($settings['content_elements'])) {
+                $settings['content_elements'] = unserialize($settings['content_elements']);
+            }
+            return $settings;
+        } else {
+            return array();
+        }
+        
+    }
 }
 
 if(!function_exists('pl_form_hidden')) 

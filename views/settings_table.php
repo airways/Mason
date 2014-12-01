@@ -10,7 +10,11 @@
     <div class="ce_element_options js_hide">
 <?php endif; ?>
 
-
+    int_id = <?php echo $int_id; ?><br/>
+    <?php echo form_hidden('int_id', $int_id); ?>
+    <label>Block Name <?php echo form_input('mason_name', $mason_name); ?></label><br/>
+    <hr/>
+    
     <table cellpadding="0" cellspacing="0" class="ce_settings_table" width="100%">
         <tbody class="ce_settings_mason">
             <?php foreach ($settings as $i => $setting_block): ?>
