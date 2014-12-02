@@ -176,6 +176,8 @@ class Mason_element {
     {
         /* Loop through configured elements, unpacking each one's data and it for the backend form */
 
+        $this->_load_asset('screen.css');
+
         preg_match('/([^\]]*)\[([^\]]*)\].*/', $this->field_name, $matches);
         $field_name = $matches[1];
         $mason_id = $matches[2];
@@ -278,9 +280,16 @@ class Mason_element {
                     }
 
                     // Insert space between subelements
-                    $first_loop = $first_loop ? FALSE : !$result .= '<br />'; //<br />';
+                    if($element_type == 'text_field') {
+                        $width = 49;
+                    } else {
+                        $width = -1;
+                    }
+                    if($width <= 0) {
+                        $first_loop = $first_loop ? FALSE : !$result .= '<br />'; //<br />';
+                    }
 
-                    $result .= '<div class="mason_field" data-element-type="'.$element_type.'" data-eid="'.$element_eid.'">';
+                    $result .= '<div class="mason_field" data-element-type="'.$element_type.'" data-eid="'.$element_eid.'" '.($width > 0 ? 'style="width:'.$width.'%; display: inline-block; "' : '').'>';
                     $result .= '<b>'.$element_config['title'].'</b><br />';
                     $result .= $element_result; // the subelement itself preceded by the necessary hidden elements
                     $result .= '</div>'; // for class="mason_field"

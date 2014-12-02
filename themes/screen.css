@@ -98,3 +98,14 @@ table.mainTable td .ce_settings_table tr.mason_block_element td {
     margin-bottom: 20px;
     padding: 10px;
 }
+.publish_field .content_elements_tile_header label {
+    font-weight: bold;
+    font-size: 14px;
+}
+.mason_field {
+    margin-top: 10px;
+    margin-right: 10px;
+}
+.mason_field > b {
+    display: block;
+}
