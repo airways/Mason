@@ -484,24 +484,26 @@ class Mason_element {
                     
                     
                     // Find the block for this field
-                    if($count = preg_match($pattern = '#'.LD.$element_name.RD.'(.*?)'.LD.'/'.$element_name.RD.'#s', $row_result, $matches))
+                    if($count = preg_match_all($pattern = '#'.LD.$element_name.RD.'(.*?)'.LD.'/'.$element_name.RD.'#s', $row_result, $matches))
                     {
-                        $match = $matches[0];
-                        $block = $matches[1];
+                        foreach($matches[0] as $i => $match) {
+                            $block = $matches[1][$i];
+                            //krumo(array($match, $block));
+                            
+                            // If there is a parsing method, call it - otherwise just set our result to the text data value
+                            if(method_exists($this->EE->elements->$element_type->handler, 'replace_element_tag'))
+                            {
+                                // var_dump($load_data['element_data']);
+                                // var_dump($element_eid);
+                                $parse_result = $this->EE->elements->$element_type->handler->replace_element_tag($load_data['element_data'][$element_eid], $params, $block);
+                            } else {
+                                $parse_result = $load_data['element_data'][$element_eid];
+                            }
+                            
+                            // Replace the entire matched block including the tag pair with the parse results
+                            $row_result = str_replace($match, $parse_result, $row_result);
+                        }
                     }
-                    
-                    // If there is a parsing method, call it - otherwise just set our result to the text data value
-                    if(method_exists($this->EE->elements->$element_type->handler, 'replace_element_tag'))
-                    {
-                        // var_dump($load_data['element_data']);
-                        // var_dump($element_eid);
-                        $parse_result = $this->EE->elements->$element_type->handler->replace_element_tag($load_data['element_data'][$element_eid], $params, $block);
-                    } else {
-                        $parse_result = $load_data['element_data'][$element_eid];
-                    }
-                    
-                    // Replace the entire matched block including the tag pair with the parse results
-                    $row_result = str_replace($match, $parse_result, $row_result);
                 }
                 
             }
