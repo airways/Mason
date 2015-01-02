@@ -42,6 +42,9 @@
  -----------------------------------------------------------------------------*/
 
 require_once PATH_THIRD.'mason/config.php';
+if(file_exists(PATH_THIRD.'prolib/helpers/krumo/class.krumo.php')) {
+    require_once PATH_THIRD.'prolib/helpers/krumo/class.krumo.php';
+}
 
 class Mason_element { 
 
@@ -103,8 +106,8 @@ class Mason_element {
                         {
                             //echo 'save <b>'.$element_eid.'</b><br/>';
                             //var_dump($sub_element_data);
-                            echo '<hr/><pre><b>prep_handler; save_element</b> '.__FILE__.':'.__LINE__.PHP_EOL;
-                            print_r(array('eid' => $element_eid, 'name' => $element_name, 'type' => $element_type, 'settings' => $element_settings, 'sub_element_data' => $sub_element_data['data']));
+                            //echo '<hr/><pre><b>prep_handler; save_element</b> '.__FILE__.':'.__LINE__.PHP_EOL;
+                            //print_r(array('eid' => $element_eid, 'name' => $element_name, 'type' => $element_type, 'settings' => $element_settings, 'sub_element_data' => $sub_element_data['data']));
                             $this->prep_handler($new_eid, $element_name, $element_type, $element_settings);
                             
                             
@@ -121,9 +124,10 @@ class Mason_element {
         } else {
             echo 'Missing mason id or no mason_elements defined.<br/>';
         }
+        /*
         echo '<hr/><pre><b>save_element save_data</b> '.__FILE__.':'.__LINE__.PHP_EOL;
         print_r($save_data);
-
+        */
         $out = base64_encode(serialize($save_data));
         return $out;
     }
@@ -131,8 +135,10 @@ class Mason_element {
     function post_save_element($data)
     {
         /* Loop through configured elements, call post save on each */
+        /*
         echo '<hr/><pre><b>post_save_element</b> '.__FILE__.':'.__LINE__.PHP_EOL;
         print_r($data);
+        */
 
         preg_match('/([^\]]*)\[([^\]]*)\].*/', $this->field_name, $matches);
         $field_name = $matches[1];
@@ -176,6 +182,9 @@ class Mason_element {
     {
         /* Loop through configured elements, unpacking each one's data and it for the backend form */
 
+        //$footer_items = $this->EE->cp->footer_item;
+        //$this->EE->cp->footer_item = array();
+        
         $this->_load_asset('screen.css');
 
         preg_match('/([^\]]*)\[([^\]]*)\].*/', $this->field_name, $matches);
@@ -188,16 +197,71 @@ class Mason_element {
         $result .= '<input type="hidden" name="mason_entry_form" value="1" />';        
         $result .= '<input type="hidden" name="'.$field_name.'['.$mason_id.'][data]" value="'.$mason_id.'" />';
         
-        $load_data = unserialize(base64_decode($data));
-        
         if(isset($this->settings['mason_elements']))
         {
+            if(isset($_POST['mason'][$mason_id])) {
+                $data = $_POST['mason'][$mason_id];
+                /*
+                echo '<pre>';
+                echo '<b>$_POST[mason]['.$mason_id.']:</b>'.PHP_EOL;
+                var_dump($data);
+                var_dump($_POST);
+                echo '</pre>';
+                exit;
+                // */
+                // TODO: Load data for sub_elements into element_data index of array
+                $load_data = array(
+                    'element_data' => array(),
+                    'element_xid' => array(),
+                );
+                
+                
+                foreach($this->settings['mason_elements'] as $element_config)
+                {
+                    //krumo($element_config);
+                    $element_name = $element_config['name'];
+                    $element_type = $element_config['type'];
+                    $element_eid = $element_config['eid'];
+                    $element_settings = $element_config['settings'];
+                    
+                    foreach($data['sub_elements'] as $post_element_id => $element_data)
+                    {
+                        // If the subelement data is not an array or eid doesn't match the subelement we are currently
+                        // looking for, skip it
+                        if(!is_array($element_data)) continue;
+                        if($element_data['field_eid'] != $element_eid) continue;
+                        
+                        // Map the data as if it was saved
+                        if(is_array($element_data['data'])) {
+                            $load_data['element_data'][$element_eid] = serialize($element_data['data']);
+                        } else {
+                            $load_data['element_data'][$element_eid] = $element_data['data'];
+                        }
+                        
+                        $load_data['element_xid'][$element_settings['eid']] = $post_element_id;
+                    }
+                }
+            } else {
+            
+                if(!is_array($data)) {
+                    $load_data = unserialize(base64_decode($data));
+                }
+            }
+    
+            /*
+            echo '<b>load_data</b><pre>';
+            var_dump($load_data);
+            echo '</pre>';
+            // */
+
             $load_data = $this->unserialize_load_data($load_data);
 
             $first_loop = TRUE;
+            $idx = 0;
             foreach($this->settings['mason_elements'] as $element_config)
             {
                 //var_dump($element_config);
+                $idx++;
                 $element_name = $element_config['name'];
                 $element_type = $element_config['type'];
                 $element_eid = $element_config['eid'];
@@ -219,7 +283,11 @@ class Mason_element {
                             // make up a data/xid and replace it into the result
                             // the original element_eid is always used to save the data in the array
                             // but we need a unique one for each block so that they do not collide
-                            $new_eid = $this->random_string();
+                            // -- this should not happen anymore, since we save the XID and that value is actually
+                            // made up by the javascript code if everything is working well.
+                            // any hash that starts with xx and ends with yy, consiting otherwise of numbers is from
+                            // this hash_id() function and indicates a problem has occured.
+                            $new_eid = $this->hash_id($this->field_name, $idx);
                         } else {
                             //echo '<hr/><pre><b>display_element element_xid</b> '.__FILE__.':'.__LINE__.PHP_EOL;
                             //print_r($load_data['element_xid']);echo'</pre>';
@@ -253,8 +321,10 @@ class Mason_element {
                         $data = @$load_data['element_data'][$element_eid];
                     }
                     
-                    //echo '<hr/><pre><b>display_element data</b> '.__FILE__.':'.__LINE__.PHP_EOL;
-                    //print_r(array(is_null($load_data['element_data']) ? $element_eid : $new_eid, $data)); echo '</pre>';
+                    /*
+                    echo '<hr/><pre><b>display_element data</b> '.__FILE__.':'.__LINE__.PHP_EOL;
+                    print_r(array(is_null($load_data['element_data']) ? $element_eid : $new_eid, $data)); echo '</pre>';
+                    */
                     
                     $element_result = $this->EE->elements->$element_type->handler->display_element($data, true);
                     
@@ -289,16 +359,23 @@ class Mason_element {
                         $first_loop = $first_loop ? FALSE : !$result .= '<br />'; //<br />';
                     }
 
-                    $result .= '<div class="mason_field" data-element-type="'.$element_type.'" data-eid="'.$element_eid.'" '.($width > 0 ? 'style="width:'.$width.'%; display: inline-block; "' : '').'>';
+                    // this div had content_elements_tile_body on it as well, but this causes a problem where CE
+                    // sends us an empty jquery objcet in the display event, instead of giving us the newly added
+                    // element
+                    $result .= '<div class="mason_field " data-element-type="'.$element_type.'" data-eid="'.$element_eid.'" '.($width > 0 ? 'style="width:'.$width.'%; display: inline-block; "' : '').'>';
                     $result .= '<b>'.$element_config['title'].'</b><br />';
                     $result .= $element_result; // the subelement itself preceded by the necessary hidden elements
                     $result .= '</div>'; // for class="mason_field"
                 }
             }
+        } else {
+            $result .= '<b>No mason blocks configured!</b>';
         }
         
         $result .= '</div>'; // for class="mason_container"
 
+        //$this->EE->cp->footer_item = $footer_items;
+        
         return $result;
     }
     
@@ -480,8 +557,8 @@ class Mason_element {
                 $settings_block[] = array(
                         $label_width => lang('mason_title'), // . ' ' . $i,
                         form_hidden('field_eid]['.$i, $element_config['settings']['eid']) .
-                        str_replace('name=', 'id="mason_element_order" name=', form_hidden('field_order]['.$i, $i, false)) .
-                        str_replace('name=', 'id="mason_command" name=', form_hidden('field_command]['.$i, '', false)) .
+                        str_replace('name=', 'class="mason_element_order" name=', form_hidden('field_order]['.$i, $i, false)) .
+                        str_replace('name=', 'class="mason_command" name=', form_hidden('field_command]['.$i, '', false)) .
                         form_input('field_title]['.$i, $element_config['title'], 'class="field_title"'),
                     );
                 $settings_block[] = array(
@@ -792,16 +869,17 @@ class Mason_element {
     
     function prep_handler($element_eid, $element_name, $element_type, $element_settings)
     {
-        preg_match('/([^\]]*)\[([^\]]*)\].*/', $this->field_name, $matches);
-        $field_name = $matches[1];
-        $mason_id = $matches[2];
+        preg_match('/([^\]]*)\[([^\]]*)\].*/', @$this->field_name, $matches);
+        $field_name = @$matches[1];
+        $mason_id = @$matches[2];
         #$this->EE->elements->$element_type->handler->field_name = str_replace('__element_name__', $element_type, str_replace($mason_id, $element_eid, $this->field_name));
         #$this->EE->elements->$element_type->handler->field_name = $field_name . '[' . $element_eid . '][data]';
         //echo '<hr/>mason field_name=';
         //var_dump($this->field_name);echo '<br/>';
-        $this->EE->elements->$element_type->handler->field_name = str_replace($mason_id, $element_eid, $this->field_name);
+        $this->EE->elements->$element_type->handler->field_name = str_replace($mason_id, $element_eid, @$this->field_name);
         //echo '<hr/>element field_name=';
         //var_dump($this->EE->elements->$element_type->handler->field_name);echo '<br/>';
+        
         $this->EE->elements->$element_type->handler->element_name  = $element_name;
         $this->EE->elements->$element_type->handler->element_title  = $element_settings["title"];
         $this->EE->elements->$element_type->handler->element_id  = $element_eid;
@@ -818,6 +896,12 @@ class Mason_element {
         for ($i = 0; $i < $length; $i++) {
             $str .= $chars[rand(0, strlen($chars) - 1)];
         }
+        return $str;
+    }
+    
+    function hash_id($base, $id)
+    {
+        $str = 'xx'.crc32($base).crc32($id).'yy';
         return $str;
     }
     

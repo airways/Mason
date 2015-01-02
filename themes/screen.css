@@ -102,6 +102,10 @@ table.mainTable td .ce_settings_table tr.mason_block_element td {
     font-weight: bold;
     font-size: 14px;
 }
+.mason_container .content_elements_tile_body {
+    padding: 10px 0 10px 0;
+    margin: 0;
+}
 .mason_field {
     margin-top: 10px;
     margin-right: 10px;

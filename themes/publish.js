@@ -52,6 +52,9 @@ function ce_mason_init(data) {
 }
 
 ContentElements.bind('mason', 'display', function(data) {
+console.log('mason:display');
+console.log(data);
+console.log($(data));
     ce_mason_init($(data));
 });
 
@@ -67,3 +70,5 @@ $(window).ready(function()
         }
     });
 });
+
+

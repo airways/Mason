@@ -34,7 +34,7 @@ var mason_settings = {
         
         $('.mason_button_remove').unbind('click').click(function(event) {
             event.preventDefault();
-            mason_settings.delete_mason_subelement($(this).closest('.mason_block_element'));
+            mason_settings.delete_mason_subelement($(this).parents('.mason_block_element'));
             return false;
         });
         
