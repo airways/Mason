@@ -1,7 +1,8 @@
+<a id="mason<?php echo str_replace(array('.',' '), '', $int_id); ?>"></a>
 <?php if($field_types_changed): ?>
     <div class="warning element_modified_type">Subelement types have been changed or added - please resave this element to apply new settings.</div>
     <script>
-        setTimeout("$('html, body').animate({scrollTop: $('.element_modified_type').offset().top -50 }, 'slow'); ", 500);
+        setTimeout("$('html, body').animate({scrollTop: $(window.location.hash).offset().top -50 }, 'slow'); ", 500);
     </script>
     <a href="#" class="ce_element_options_off" >&laquo; <?= lang('settings_options_hide') ?></a>
     <div class="ce_element_options js_show">
@@ -10,10 +11,9 @@
     <div class="ce_element_options js_hide">
 <?php endif; ?>
 
-    int_id = <?php echo $int_id; ?><br/>
+    <!-- int_id = <?php echo $int_id; ?> -->
     <?php echo form_hidden('int_id', $int_id); ?>
-    <label>Block Name <?php echo form_input('mason_name', $mason_name); ?></label><br/>
-    <hr/>
+    <!--<label>Block Name <?php echo form_input('mason_name', $mason_name); ?></label><br/>-->
     
     <table cellpadding="0" cellspacing="0" class="ce_settings_table" width="100%">
         <tbody class="ce_settings_mason">

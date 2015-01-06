@@ -92,7 +92,7 @@ class Mason_ext {
         if($mason_redirect = $this->EE->session->flashdata('mason_redirect'))
         {
             list($field_id, $mason_id) = explode('|', $mason_redirect);
-            $mason_id = 'element_modified_type';
+            #$mason_id = 'element_modified_type';
             $this->set_base();
             
             //$this->EE->functions->redirect(BASE.AMP.'C=admin_content'.AMP.'M=field_edit'.AMP.'field_id='.$field_id.'#'.$mason_id);
@@ -100,7 +100,7 @@ class Mason_ext {
             //exit;
             //header('Location: '.cp_url('cp/admin_content/field_edit', array('field_id' => $field_id)).'#'.$mason_id);
             //exit;
-            $this->EE->functions->redirect(cp_url('cp/admin_content/field_edit', array('field_id' => $field_id)).'#'.$mason_id);
+            $this->EE->functions->redirect(cp_url('cp/admin_content/field_edit', array('field_id' => $field_id)).'#mason'.$mason_id);
             
         }
         

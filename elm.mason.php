@@ -659,7 +659,7 @@ class Mason_element {
         /* Compose parallel element configuration arrays into a single array of arrays */
         
         // This ID is used to find the mason block we want
-        $int_id = isset($data['int_id']) ? $data['int_id'] : microtime();
+        $int_id = (isset($data['int_id']) && $data['int_id']) ? str_replace(array('.',' '), '', $data['int_id']) : str_replace(array('.',' '), '', microtime(true).mt_rand(1,1000));
         
         $current_settings = $this->_get_field_settings();
         
@@ -679,7 +679,7 @@ class Mason_element {
         
         $old_element_settings = array();
         $old_count = 0;
-        //echo $int_id.'<br/>';
+        //echo 'int_id='.$int_id.'<br/>';
         foreach($current_settings['content_elements'] as $index => $element_settings) {
             //echo '<pre>';
             //var_dump($element_settings);
@@ -761,7 +761,7 @@ class Mason_element {
         //else $old_data = array();
         //$data['field_types_changed'] = $this->field_types_changed($old_data, $data);
         
-        $data['field_types_changed'] = count($data['mason_elements']) > $old_count;
+        $data['field_types_changed'] = count($data['mason_elements']) > $old_count+1;
         /*
         if($data['field_types_changed']) {
             echo '<pre>';
@@ -784,7 +784,7 @@ class Mason_element {
         
         if($data['field_types_changed']) {
             $field_id = $this->EE->input->get_post('field_id');
-            $this->EE->session->set_flashdata('mason_redirect', $field_id.'|'.$mason_name);
+            $this->EE->session->set_flashdata('mason_redirect', $field_id.'|'.$int_id);
         }
         //exit;
 
