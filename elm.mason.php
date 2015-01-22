@@ -220,6 +220,7 @@ class Mason_element {
                 {
                     //krumo($element_config);
                     $element_name = $element_config['name'];
+                    $element_hint = isset($element_config['hint']) ? $element_config['hint'] : '';
                     $element_type = $element_config['type'];
                     $element_eid = $element_config['eid'];
                     $element_settings = $element_config['settings'];
@@ -263,9 +264,11 @@ class Mason_element {
                 //var_dump($element_config);
                 $idx++;
                 $element_name = $element_config['name'];
+                $element_hint = isset($element_config['hint']) ? $element_config['hint'] : '';
                 $element_type = $element_config['type'];
                 $element_eid = $element_config['eid'];
                 $element_settings = $element_config['settings'];
+                
                 /*
                 echo '<pre>';
                 var_dump($element_type);
@@ -278,7 +281,7 @@ class Mason_element {
                 {
                     if(!is_null($load_data['element_data']))
                     {
-                        if(!array_key_exists('element_xid', $load_data) && !array_key_exists($element_eid, $load_data['element_xid']))
+                        if(!array_key_exists('element_xid', $load_data) || !array_key_exists($element_eid, $load_data['element_xid']))
                         {
                             // make up a data/xid and replace it into the result
                             // the original element_eid is always used to save the data in the array
@@ -290,6 +293,7 @@ class Mason_element {
                             $new_eid = $this->hash_id($this->field_name, $idx);
                         } else {
                             //echo '<hr/><pre><b>display_element element_xid</b> '.__FILE__.':'.__LINE__.PHP_EOL;
+                            //echo 'Looking for '.$element_eid.PHP_EOL;
                             //print_r($load_data['element_xid']);echo'</pre>';
                             // use the same xid we generated last time - assets also likes to store data in other tables
                             // using this id
@@ -363,7 +367,10 @@ class Mason_element {
                     // sends us an empty jquery objcet in the display event, instead of giving us the newly added
                     // element
                     $result .= '<div class="mason_field " data-element-type="'.$element_type.'" data-eid="'.$element_eid.'" '.($width > 0 ? 'style="width:'.$width.'%; display: inline-block; "' : '').'>';
-                    $result .= '<b>'.$element_config['title'].'</b><br />';
+                    $result .= '<div class="mason_field_title"><b>'.$element_config['title'].'</b>';
+                    if(trim($element_hint) != '') $result .= '<div class="mason_hint">'.$element_hint.'</div>';
+                    $result .= '</div>';
+                    //$result .= print_r($load_data,true);
                     $result .= $element_result; // the subelement itself preceded by the necessary hidden elements
                     $result .= '</div>'; // for class="mason_field"
                 }
@@ -436,7 +443,10 @@ class Mason_element {
         
         $result = '';
 
+        if(!isset($this->settings['mason_elements'])) return $result;
+        
         // Replace block level variables
+        /*
         $vars = array(
             'block_name' => $this->element_name
         );
@@ -446,68 +456,80 @@ class Mason_element {
         {
             $tagdata = str_replace(LD.$var.RD, $val, $tagdata);
         }
+        */
         
-        if(isset($this->settings['mason_elements']))
+        // Generate a tag name from the block name. For instance "Contact Us" will be {contact_us}
+        $tagname = strtolower(trim($this->element_name));
+        $tagname = preg_replace('/[^\da-z]/i', '_', $tagname);
+        // Collapse what were any duplicate non-alphanumeric characters into single underscores
+        while(strpos('__', $tagname) !== FALSE) {
+            $tagname = str_replace('__', '_', $tagname);
+        }
+        
+        // Find the template block for the mason block
+        if($count = preg_match_all($pattern = '#'.LD.$tagname.RD.'(.*?)'.LD.'/'.$tagname.RD.'#s', $tagdata, $mason_matches))
         {
-        
-            $row_result = $tagdata;
-            
-            foreach($this->settings['mason_elements'] as $element_config)
+            foreach($mason_matches[0] as $i => $mason_match)
             {
-                $element_name = $element_config['name'];
-                $element_type = $element_config['type'];
-                $element_eid = $element_config['eid'];
-                $element_settings = $element_config['settings'];
+                $row_result  = $mason_matches[1][$i];
                 
-                if(isset($this->EE->elements->$element_type->handler))
+                foreach($this->settings['mason_elements'] as $element_config)
                 {
-                    $this->prep_handler($element_eid, $element_name, $element_type, $element_settings); 
+                    $element_name = $element_config['name'];
+                    $element_type = $element_config['type'];
+                    $element_eid = $element_config['eid'];
+                    $element_settings = $element_config['settings'];
                     
-                    $block = false;
-                    $match = false;
-                    
-                    // Prep conditionals with value for element - strip_tags to work around various issue,
-                    // we really just want to know if a valid value is set or not -- simple string comparison
-                    // will also hopefully work properly
-                    $row_result = $this->EE->functions->prep_conditionals($row_result, array($element_name => (strip_tags($load_data['element_data'][$element_eid]))));
-                    
-                    // If the user is not using a closing tag, they just want the value - turn it into
-                    // a pair with {value} inbetween
-                    if(($pos = strpos($row_result, LD.'/'.$element_name.RD)) === FALSE)
+                    if(isset($this->EE->elements->$element_type->handler))
                     {
-                        // Make a small template snippet to get value
-                        $tpl = LD.$element_name.RD.'{value}'.LD.'/'.$element_name.RD;
-                        // Replace tag with template snippet
-                        $row_result = str_replace(LD.$element_name.RD, $tpl, $row_result);
+                        $this->prep_handler($element_eid, $element_name, $element_type, $element_settings); 
                         
-                    }
-                    
-                    
-                    // Find the block for this field
-                    if($count = preg_match_all($pattern = '#'.LD.$element_name.RD.'(.*?)'.LD.'/'.$element_name.RD.'#s', $row_result, $matches))
-                    {
-                        foreach($matches[0] as $i => $match) {
-                            $block = $matches[1][$i];
-                            //krumo(array($match, $block));
+                        $block = false;
+                        $match = false;
+                        
+                        // Prep conditionals with value for element - strip_tags to work around various issue,
+                        // we really just want to know if a valid value is set or not -- simple string comparison
+                        // will also hopefully work properly
+                        $row_result = $this->EE->functions->prep_conditionals($row_result, array($element_name => (strip_tags($load_data['element_data'][$element_eid]))));
+                        
+                        // If the user is not using a closing tag, they just want the value - turn it into
+                        // a pair with {value} inbetween
+                        if(($pos = strpos($row_result, LD.'/'.$element_name.RD)) === FALSE)
+                        {
+                            // Make a small template snippet to get value
+                            $tpl = LD.$element_name.RD.'{value}'.LD.'/'.$element_name.RD;
+                            // Replace tag with template snippet
+                            $row_result = str_replace(LD.$element_name.RD, $tpl, $row_result);
                             
-                            // If there is a parsing method, call it - otherwise just set our result to the text data value
-                            if(method_exists($this->EE->elements->$element_type->handler, 'replace_element_tag'))
-                            {
-                                // var_dump($load_data['element_data']);
-                                // var_dump($element_eid);
-                                $parse_result = $this->EE->elements->$element_type->handler->replace_element_tag($load_data['element_data'][$element_eid], $params, $block);
-                            } else {
-                                $parse_result = $load_data['element_data'][$element_eid];
+                        }
+                        
+                        
+                        // Find the block for this field
+                        if($count = preg_match_all($pattern = '#'.LD.$element_name.RD.'(.*?)'.LD.'/'.$element_name.RD.'#s', $row_result, $matches))
+                        {
+                            foreach($matches[0] as $i => $match) {
+                                $block = $matches[1][$i];
+                                //krumo(array($match, $block));
+                                
+                                // If there is a parsing method, call it - otherwise just set our result to the text data value
+                                if(method_exists($this->EE->elements->$element_type->handler, 'replace_element_tag'))
+                                {
+                                    // var_dump($load_data['element_data']);
+                                    // var_dump($element_eid);
+                                    $parse_result = $this->EE->elements->$element_type->handler->replace_element_tag($load_data['element_data'][$element_eid], $params, $block);
+                                } else {
+                                    $parse_result = $load_data['element_data'][$element_eid];
+                                }
+                                
+                                // Replace the entire matched block including the tag pair with the parse results
+                                $row_result = str_replace($match, $parse_result, $row_result);
                             }
-                            
-                            // Replace the entire matched block including the tag pair with the parse results
-                            $row_result = str_replace($match, $parse_result, $row_result);
                         }
                     }
+                    
                 }
-                
+                $result .= $row_result;
             }
-            $result .= $row_result;
         }
         
         return $result;
@@ -566,6 +588,10 @@ class Mason_element {
                 $settings_block[] = array(
                         $label_width => lang('mason_name'), // . ' ' . $i,
                         form_input('field_name]['.$i, $element_config['name'], 'class="field_name"'),
+                    );
+                $settings_block[] = array(
+                        $label_width => lang('mason_hint'),
+                        form_input('field_hint]['.$i, (isset($element_config['hint']) ? $element_config['hint'] : ''), 'class="field_hint"'),
                     );
                 $settings_block[] = array(
                         $label_width => lang('mason_type'),
@@ -633,6 +659,10 @@ class Mason_element {
             array(
                 $label_width => lang('mason_name'),
                 form_input('field_name]['.$i, '', 'class="field_name"'),
+            ),
+            array(
+                $label_width => lang('mason_hint'),
+                form_input('field_hint]['.$i, '', 'class="field_hint"'),
             ),
             array(
                 $label_width => lang('mason_type'),
@@ -703,6 +733,7 @@ class Mason_element {
 
             $field_title = $data['field_title'][$i];
             $field_type = $data['field_type'][$i];
+            $field_hint = $data['field_hint'][$i];
 
             // If being saved for the first time, the setting will not be present
             $field_settings = (isset($data['field_settings']) && is_array($data['field_settings']) && isset($data['field_settings'][$i])) ? $data['field_settings'][$i] : array('test' => 'this is');
@@ -731,6 +762,7 @@ class Mason_element {
                 $data['mason_elements'][] = array(
                     'title' => $field_title,
                     'name' => $field_name,
+                    'hint' => $field_hint,
                     'type' => $field_type,
                     'order' => $field_order,
                     'settings' => $field_settings,
@@ -749,6 +781,7 @@ class Mason_element {
         // Remove parallel arrays from data to be saved
         unset($data['field_title']);
         unset($data['field_name']);
+        unset($data['field_hint']);
         unset($data['field_type']);
         unset($data['field_settings']);
         
