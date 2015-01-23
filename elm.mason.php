@@ -54,7 +54,7 @@ class Mason_element {
     );
     
     public $settings = array();
-    public $cache    = array();
+    public $cache    = NULL;
     public $elements = array();
     
     public function __construct()
@@ -62,6 +62,12 @@ class Mason_element {
         $this->EE = &get_instance();
         $this->info["name"] = $this->EE->lang->line('mason_element_name');
         $this->CE = &$this->EE->api_channel_fields->field_types['content_elements'];
+        
+        if (!isset($this->EE->session->cache[__CLASS__]))
+        {
+            $this->EE->session->cache[__CLASS__] = array();
+        }
+        $this->cache =& $this->EE->session->cache[__CLASS__];
     }
     
     function save_element($data)
@@ -446,9 +452,10 @@ class Mason_element {
         if(!isset($this->settings['mason_elements'])) return $result;
         
         // Replace block level variables
-        /*
+        $this->cache['count']++;
         $vars = array(
-            'block_name' => $this->element_name
+            'block_name' => $this->element_name,
+            'mason_count' => $this->cache['count'],
         );
         
         $tagdata = $this->EE->functions->prep_conditionals($tagdata, $vars);
@@ -456,7 +463,6 @@ class Mason_element {
         {
             $tagdata = str_replace(LD.$var.RD, $val, $tagdata);
         }
-        */
         
         // Generate a tag name from the block name. For instance "Contact Us" will be {contact_us}
         $tagname = strtolower(trim($this->element_name));
@@ -528,6 +534,15 @@ class Mason_element {
                     }
                     
                 }
+                $result .= $row_result;
+            }
+        }
+        
+        if($count = preg_match_all($pattern = '#'.LD.'mason_footer'.RD.'(.*?)'.LD.'/mason_footer'.RD.'#s', $tagdata, $mason_matches))
+        {
+            foreach($mason_matches[0] as $i => $mason_match)
+            {
+                $row_result  = $mason_matches[1][$i];
                 $result .= $row_result;
             }
         }
