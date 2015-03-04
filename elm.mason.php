@@ -466,19 +466,21 @@ class Mason_element {
         
         // Generate a tag name from the block name. For instance "Contact Us" will be {contact_us}
         $tagname = strtolower(trim($this->element_name));
-        $tagname = preg_replace('/[^\da-z]/i', '_', $tagname);
+        $tagname = preg_replace('/[^\da-z0-1]/i', '_', $tagname);
         // Collapse what were any duplicate non-alphanumeric characters into single underscores
-        while(strpos('__', $tagname) !== FALSE) {
+        while(strpos($tagname, '__') !== FALSE) {
             $tagname = str_replace('__', '_', $tagname);
         }
-        
+        $this->EE->TMPL->log_item('Mason: scan for tagname '.$tagname);
+
         // Find the template block for the mason block
         if($count = preg_match_all($pattern = '#'.LD.$tagname.RD.'(.*?)'.LD.'/'.$tagname.RD.'#s', $tagdata, $mason_matches))
         {
             foreach($mason_matches[0] as $i => $mason_match)
             {
                 $row_result  = $mason_matches[1][$i];
-                
+                $this->EE->TMPL->log_item('Mason: matched on tagname '.$tagname);
+
                 foreach($this->settings['mason_elements'] as $element_config)
                 {
                     $element_name = $element_config['name'];
