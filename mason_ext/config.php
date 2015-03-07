@@ -1,8 +1,8 @@
 <?php
 
-// @version 1.07
+// @version 1.12
 
-define('MASON_VERSION', '1.07');
+define('MASON_VERSION', '1.12');
 define('MASON_NAME', 'Mason');
 define('MASON_CLASS', 'Mason'); // must match module class name
 define('MASON_DESCRIPTION', 'Mason Content Block for Content Elements.');
