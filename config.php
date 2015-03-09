@@ -1,10 +1,10 @@
 <?php
 
-// @version 1.05
+// @version 1.13
 // @element
 // @dir mason
 
-define('MASON_VERSION', '1.05');
+define('MASON_VERSION', '1.13');
 define('MASON_NAME', 'Mason');
 define('MASON_CLASS', 'Mason'); // must match module class name
 define('MASON_DESCRIPTION', 'Mason allows you to bind multiple Elements together into reusable Content Blocks which can be placed in a Content Elements field.');
