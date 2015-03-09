@@ -30,7 +30,7 @@ function ce_mason_init(data) {
                        + '<input type="hidden" name="'+field_name+'['+eid+'][field_eid]" value="__field_eid__">'
                        + */$this.html();
             
-            console.log('replace ' + hash_key + ' with ' + eid);
+            //console.log('replace ' + hash_key + ' with ' + eid);
             html = html.replace(new RegExp(hash_key, 'g'), eid);
             html = html.replace(new RegExp('__eid__', 'g'), eid);
             html = html.replace(new RegExp(old_eid, 'g'), eid);
@@ -52,9 +52,9 @@ function ce_mason_init(data) {
 }
 
 ContentElements.bind('mason', 'display', function(data) {
-console.log('mason:display');
-console.log(data);
-console.log($(data));
+//console.log('mason:display');
+//console.log(data);
+//console.log($(data));
     ce_mason_init($(data));
 });
 

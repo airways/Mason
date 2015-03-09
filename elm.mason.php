@@ -474,7 +474,26 @@ class Mason_element {
         $this->EE->TMPL->log_item('Mason: scan for tagname '.$tagname);
 
         // Find the template block for the mason block
-        if($count = preg_match_all($pattern = '#'.LD.$tagname.RD.'(.*?)'.LD.'/'.$tagname.RD.'#s', $tagdata, $mason_matches))
+        
+        /*
+        // First check to see if we parsed it for this block of tagdata already and use that
+
+        $tagdata_hash = md5($tagdata);
+        if(!isset($this->cache['tagdata'])) $this->cache['tagdata'] = array();
+        if(!isset($this->cache['tagdata'][$tagdata_hash])) $this->cache['tagdata'][$tagdata_hash] = array();
+
+        if(isset($this->cache['tagdata'][$tagdata_hash][$tagname])) {
+            list($count, $mason_matches) = $this->cache['tagdata'][$tagdata_hash][$tagname];
+        } else {
+            $count = preg_match_all($pattern = '#'.LD.$tagname.RD.'(.*?)'.LD.'/'.$tagname.RD.'#s', $tagdata, $mason_matches);
+            $this->cache['tagdata'][$tagdata_hash][$tagname] = array($count, $mason_matches);
+        }
+
+        if($count)
+        */
+
+        $count = preg_match_all($pattern = '#'.LD.$tagname.RD.'(.*?)'.LD.'/'.$tagname.RD.'#s', $tagdata, $mason_matches);
+        if($count)
         {
             foreach($mason_matches[0] as $i => $mason_match)
             {
