@@ -31,6 +31,10 @@ function ce_mason_init(data) {
                        + */$this.html();
             
             //console.log('replace ' + hash_key + ' with ' + eid);
+            //console.log('field_name='+field_name+'; hash_key='+hash_key+'; eid='+eid+'; old_eid='+old_eid);
+            //console.log(html);
+
+
             html = html.replace(new RegExp(hash_key, 'g'), eid);
             html = html.replace(new RegExp('__eid__', 'g'), eid);
             html = html.replace(new RegExp(old_eid, 'g'), eid);
@@ -64,9 +68,12 @@ $(window).ready(function()
     // Trigger display event on existing element's fields
     $('.mason_field').each(function(i, element) {
         var $this = $(this);
+        if($this.parents('.content_elements_prototypes').length == 0) {
+        // Ensure this is not a prototype
         var sub_type = $this.attr('data-element-type');
-        if(sub_type != 'wysiwyg') { // Built in Editor fieldtype does it's own display init
-            ContentElements.callback('display', sub_type, $this);
+            if(sub_type != 'wysiwyg') { // Built in Editor fieldtype does it's own display init
+                ContentElements.callback('display', sub_type, $this);
+            }
         }
     });
 });
