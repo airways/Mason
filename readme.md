@@ -12,6 +12,7 @@ The beta group is located here: https://groups.google.com/forum/#!forum/mason-be
 
 # Installation
 
+Note: Mason *requires* Content Elements (https://fresh-dev.com/expressionengine/content-elements), created by Krea / Fresh Dev
 1. Move the third_party/content_elements/elements/mason folder
 2. Move the third_party/mason folder
 3. Move the themes/third_party/content_elements/elements/mason folder
