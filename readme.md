@@ -4,15 +4,13 @@ Please see the License section at the end of this file. By using this code, you 
 
 Mason is a "content block" element design to work with the Content Elements fieldtype in ExpressionEngine. You can use Mason to create reusable blocks of fields/elements which can be placed on to a page as many times as needed, in any order, and which remain bound together as a single piece of data.
 
-Beta
-----
+# Beta
 
 Please post details on the projects you are/will use Mason for, what capabilities you see as useful in the future, and any bug reports that you may have. When posting a bug report, please include screenshots and steps to reproduce the bug. Thanks for your help!
 
 The beta group is located here: https://groups.google.com/forum/#!forum/mason-beta
 
-Installation
-------------
+# Installation
 
 1. Move the third_party/content_elements/elements/mason folder
 2. Move the third_party/mason folder
@@ -25,8 +23,7 @@ You will want to remove the predefined Mason (Content Block) element from any of
 fields since this is a very generic name for a content block. Instead custom Mason elements in each
 CE field with unique names appropriate to each block type.
 
-Usage
------
+# Usage
 
 Using Mason in the CP is fairly straight forward - create a new Content Elements field, then add
 your Mason definitions containing the content blocks you wish to use in that field. At this point
@@ -43,30 +40,30 @@ Inside your templates, you will want to extract content from a Mason block. To d
 normal Content Elements loop (if you are making using of non-Mason elements), then new blocks of code
 for each of your content blocks:
 
-{body}
-    {wysiwyg}
-        {value}
-    {/wysiwyg}
-    
-    ... etc ...
-    
-    {mason}
-        {if block_name == "Article Intro"} {!-- repeat this section, changing the name for each custom block --}
-            {!-- subelements are addressed by name like so (instead of by the element type tag as in a normal CE field): --}
-            <p>{summary}{value}{/summary}</p>
-            {!-- if you just want the value, you can write the tag by itself: --}
-            <p><b>By {byline}</b></p>
-            {!-- you can only use one style for each subelement or the parser will get confused --}
-            {hero_images}
-                {if images}
-            		{images}
-            			<img src="{thumb}" /><br />
-            		{/images}
-            	{/if}
-        	{/hero_images}
-        {/if}
-    {/mason}
-{/body}
+    {body}
+        {wysiwyg}
+            {value}
+        {/wysiwyg}
+
+        ... etc ...
+
+        {mason}
+            {if block_name == "Article Intro"} {!-- repeat this section, changing the name for each custom block --}
+                {!-- subelements are addressed by name like so (instead of by the element type tag as in a normal CE field): --}
+                <p>{summary}{value}{/summary}</p>
+                {!-- if you just want the value, you can write the tag by itself: --}
+                <p><b>By {byline}</b></p>
+                {!-- you can only use one style for each subelement or the parser will get confused --}
+                {hero_images}
+                    {if images}
+                        {images}
+                            <img src="{thumb}" /><br />
+                        {/images}
+                    {/if}
+                {/hero_images}
+            {/if}
+        {/mason}
+    {/body}
 
 ## License
 
